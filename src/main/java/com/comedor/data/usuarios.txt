@@ -1,0 +1,15 @@
+Estudiante;29617475;123456;true;0;120.0;Computación;Ciencias
+Estudiante;12345678;pass123;true;0;10.0;Biología;Ciencias
+Estudiante;33333333;clave33;true;0;0.0;Derecho;Ciencias Jurídicas y Políticas
+Estudiante;29508052;juan123;true;0;25.5;Computación;Ciencias
+Estudiante;20111222;geo2025;true;0;5.0;Geoquímica;Ciencias
+Estudiante;21444555;arq2024;true;0;100.0;Arquitectura;Arquitectura y Urbanismo
+Estudiante;22777888;med2023;true;1;0.0;Medicina;Medicina
+Estudiante;23999000;odo2022;false;3;15.0;Odontología;Odontología
+Empleado;11111111;emp111;true;0;200.0;Secretaria;Administración;EMP001
+Empleado;22222222;emp222;true;0;150.0;Profesor;Docencia;EMP002
+Empleado;44444444;emp444;true;0;300.0;Analista;Recursos Humanos;EMP003
+Empleado;55555555;emp555;true;0;50.0;Obrero;Mantenimiento;EMP004
+Administrador;99999999;admin99;true;0;0.0;ADM00001
+Administrador;88888888;admin88;true;0;0.0;ADM00002
+Administrador;77777777;admin77;true;0;0.0;ADM00003
