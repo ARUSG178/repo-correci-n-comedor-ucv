@@ -9,11 +9,13 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Properties;
 
 public class SeleccionarTurnoUI extends JFrame {
 
@@ -227,8 +229,24 @@ public class SeleccionarTurnoUI extends JFrame {
             // Combinar con la fecha de hoy
             LocalDateTime fechaReserva = LocalDateTime.of(LocalDate.now(), horaInicio);
             
-            // Pasamos al siguiente paso: Reconocimiento Facial
-            new ReconocimientoFacialUI(usuario, costoPlatillo, fechaReserva).setVisible(true);
+            // --- MODIFICACIÓN: Guardar datos para el módulo externo ---
+            Properties props = new Properties();
+            props.setProperty("cedula", usuario.obtCedula());
+            props.setProperty("costo", String.valueOf(costoPlatillo));
+            props.setProperty("fechaReserva", fechaReserva.toString());
+            props.setProperty("tipoComida", tipoComida);
+
+            try (FileOutputStream out = new FileOutputStream("verification_request.properties")) {
+                props.store(out, "Solicitud de Verificacion Biometrica");
+            }
+
+            JOptionPane.showMessageDialog(this, 
+                "Turno pre-seleccionado.\nPor favor, ejecute el módulo de verificación biométrica para completar el pago.", 
+                "Paso Siguiente", 
+                JOptionPane.INFORMATION_MESSAGE);
+            
+            // Volver a la pantalla principal del usuario
+            new PrincipalUserUI(usuario).setVisible(true);
             this.dispose();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al procesar el turno: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

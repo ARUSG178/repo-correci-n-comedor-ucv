@@ -16,7 +16,6 @@ import java.awt.FontMetrics;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.RenderingHints;
@@ -39,15 +38,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import com.comedor.vista.usuario.PrincipalUserUI;
 import com.comedor.vista.admin.PrincipalAdminUI;
-import com.comedor.vista.InicioSesionUI;
 
 
   // Interfaz gráfica para el Menú del Comedor del sistema SAGC UCV.
@@ -62,7 +58,9 @@ public class MenuUserUI extends JFrame {
     
     // Datos del platillo
     private String nombreDesayuno, precioDesayuno, rutaImagenDesayuno;
+    private String descDesayuno, infoNutricionalDesayuno;
     private String nombreAlmuerzo, precioAlmuerzo, rutaImagenAlmuerzo;
+    private String descAlmuerzo, infoNutricionalAlmuerzo;
 
     private double ccbActual = 0.0;
     private double precioCalculadoDesayuno = 0.0;
@@ -95,10 +93,14 @@ public class MenuUserUI extends JFrame {
             nombreDesayuno = props.getProperty("desayuno_nombre", "Desayuno no disponible");
             precioDesayuno = props.getProperty("desayuno_precio", "$ 0.00");
             rutaImagenDesayuno = props.getProperty("desayuno_imagen", "/com/comedor/resources/images/menu/base.jpg");
+            descDesayuno = props.getProperty("desayuno_descripcion", "Descripción no disponible.");
+            infoNutricionalDesayuno = props.getProperty("desayuno_nutricion", "Información nutricional pendiente.");
 
             nombreAlmuerzo = props.getProperty("almuerzo_nombre", "Almuerzo no disponible");
             precioAlmuerzo = props.getProperty("almuerzo_precio", "$ 0.00");
             rutaImagenAlmuerzo = props.getProperty("almuerzo_imagen", "/com/comedor/resources/images/menu/base.jpg");
+            descAlmuerzo = props.getProperty("almuerzo_descripcion", "Descripción no disponible.");
+            infoNutricionalAlmuerzo = props.getProperty("almuerzo_nutricion", "Información nutricional pendiente.");
             
             // Cargar CCB si existe
             String ccbStr = props.getProperty("ccb_actual", "0.0");
@@ -153,16 +155,18 @@ public class MenuUserUI extends JFrame {
     }
 
     // Crea un panel individual para mostrar un platillo del menú
-    private JPanel crearPlatilloPanel(String titulo, String rutaImagen, String nombre, double precioCalculado) {
+    private JPanel crearPlatilloPanel(String titulo, String rutaImagen, String nombre, double precioCalculado, String descripcion, String infoNutricional) {
         JPanel platilloPanel = new JPanel();
-        platilloPanel.setLayout(new BorderLayout(0, 15));
+        // Cambiamos a BoxLayout vertical para apilar elementos (Título, Imagen, Info, Botón)
+        platilloPanel.setLayout(new BoxLayout(platilloPanel, BoxLayout.Y_AXIS));
         platilloPanel.setOpaque(false);
         
         // Título del platillo (Desayuno/Almuerzo)
         JLabel lblTituloPlatillo = new JLabel(titulo, SwingConstants.CENTER);
-        lblTituloPlatillo.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTituloPlatillo.setFont(new Font("Segoe UI", Font.BOLD, 28));
         lblTituloPlatillo.setForeground(Color.WHITE);
         lblTituloPlatillo.setBorder(new EmptyBorder(0, 0, 10, 0));
+        lblTituloPlatillo.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         // Panel para la imagen (250x300)
         JPanel imagenPanel = new JPanel(new GridBagLayout()) {
@@ -204,41 +208,79 @@ public class MenuUserUI extends JFrame {
             }
         };
         
-        // Tamaño fijo 280x350 (Reducido para armonía con admin)
-        imagenPanel.setPreferredSize(new Dimension(280, 350));
-        imagenPanel.setMinimumSize(new Dimension(280, 350));
-        imagenPanel.setMaximumSize(new Dimension(280, 350));
+        // Tamaño aumentado para mejor visualización (380x480)
+        imagenPanel.setPreferredSize(new Dimension(380, 480));
+        imagenPanel.setMinimumSize(new Dimension(380, 480));
+        imagenPanel.setMaximumSize(new Dimension(380, 480));
         imagenPanel.setBackground(new Color(245, 245, 245));
+        imagenPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         // Aquí iría la carga de la imagen real cuando esté implementada
         try {
             Image img = null;
-            // Prioridad a archivo local (cargado por admin)
-            File f = new File(rutaImagen);
-            if (f.exists()) {
-                img = ImageIO.read(f);
-            } else {
-                // Fallback a recursos
-                URL url = getClass().getResource(rutaImagen);
-                if (url != null) img = ImageIO.read(url);
+            if (rutaImagen != null && !rutaImagen.isEmpty()) {
+                // Prioridad a archivo local (cargado por admin)
+                File f = new File(rutaImagen);
+                if (f.exists()) {
+                    img = ImageIO.read(f);
+                } else {
+                    // Fallback a recursos
+                    URL url = getClass().getResource(rutaImagen);
+                    if (url != null) img = ImageIO.read(url);
+                }
             }
             if (img != null) {
-                Image scaled = img.getScaledInstance(276, 346, Image.SCALE_SMOOTH);
+                Image scaled = img.getScaledInstance(376, 476, Image.SCALE_SMOOTH);
                 JLabel imagenLabel = new JLabel(new ImageIcon(scaled));
                 imagenLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 imagenPanel.add(imagenLabel);
             }
         } catch (Exception e) {
         }
+
+        // --- NUEVA SECCIÓN: Descripción e Información Nutricional ---
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setOpaque(false);
+        infoPanel.setBorder(new EmptyBorder(10, 5, 10, 5));
+        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblDesc = new JLabel("<html><div style='text-align: center; width: 260px;'>" + descripcion + "</div></html>");
+        lblDesc.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        lblDesc.setForeground(Color.WHITE);
+        lblDesc.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblNutri = new JLabel("<html><div style='text-align: center; width: 260px; color: #dddddd;'><br><b>Información Nutricional:</b><br>" + infoNutricional + "</div></html>");
+        lblNutri.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblNutri.setForeground(new Color(220, 220, 220));
+        lblNutri.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        infoPanel.add(lblDesc);
+        infoPanel.add(lblNutri);
         
         // Botón para seleccionar
         JButton btnSeleccionar = new JButton("SELECCIONAR");
         btnSeleccionar.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnSeleccionar.setBackground(new Color(0, 60, 120));
+        
+        Color colorBase = new Color(0, 60, 120);
+        Color colorHover = new Color(0, 90, 180); // Azul más claro para el hover
+        
+        btnSeleccionar.setBackground(colorBase);
         btnSeleccionar.setForeground(Color.WHITE);
         btnSeleccionar.setFocusPainted(false);
         btnSeleccionar.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
         btnSeleccionar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        btnSeleccionar.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btnSeleccionar.setBackground(colorHover);
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btnSeleccionar.setBackground(colorBase);
+            }
+        });
 
         // Acción: Ir a Reconocimiento Facial
         btnSeleccionar.addActionListener(e -> {
@@ -247,17 +289,17 @@ public class MenuUserUI extends JFrame {
             MenuUserUI.this.dispose();
         });
         
-        JPanel botonPanel = new JPanel(new GridBagLayout());
+        // Panel envolvente para forzar el centrado del botón
+        JPanel botonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         botonPanel.setOpaque(false);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        botonPanel.add(btnSeleccionar, gbc);
+        botonPanel.add(btnSeleccionar);
+        botonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        platilloPanel.add(lblTituloPlatillo, BorderLayout.NORTH);
-        platilloPanel.add(imagenPanel, BorderLayout.CENTER);
-        platilloPanel.add(botonPanel, BorderLayout.SOUTH);
+        platilloPanel.add(lblTituloPlatillo);
+        platilloPanel.add(imagenPanel);
+        platilloPanel.add(infoPanel);
+        platilloPanel.add(Box.createVerticalStrut(5));
+        platilloPanel.add(botonPanel);
         
         return platilloPanel;
     }
@@ -349,6 +391,14 @@ public class MenuUserUI extends JFrame {
         topBarContainer.add(verticalCenterPanel);
 
         topBarContainer.add(Box.createHorizontalGlue());
+        
+        // Título principal movido a la franja azul
+        JLabel menuTitle = new JLabel("Seleccione su platillo", SwingConstants.CENTER);
+        menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        menuTitle.setForeground(Color.WHITE);
+        topBarContainer.add(menuTitle);
+        
+        topBarContainer.add(Box.createHorizontalGlue());
 
         backgroundPanel.add(topBarContainer, BorderLayout.NORTH);
 
@@ -364,23 +414,16 @@ public class MenuUserUI extends JFrame {
         contentPanel.setOpaque(false);
         contentPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel menuTitle = new JLabel("Seleccione su platillo", SwingConstants.CENTER);
-        menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 36));
-        menuTitle.setForeground(Color.WHITE);
-        menuTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuTitle.setBorder(new EmptyBorder(0, 0, 50, 0));
-        
         JPanel filaPlatillos = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 0));
         filaPlatillos.setOpaque(false);
         filaPlatillos.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JPanel panelDesayuno = crearPlatilloPanel("Desayuno", rutaImagenDesayuno, nombreDesayuno, precioCalculadoDesayuno);
-        JPanel panelAlmuerzo = crearPlatilloPanel("Almuerzo", rutaImagenAlmuerzo, nombreAlmuerzo, precioCalculadoAlmuerzo);
+        JPanel panelDesayuno = crearPlatilloPanel("Desayuno", rutaImagenDesayuno, nombreDesayuno, precioCalculadoDesayuno, descDesayuno, infoNutricionalDesayuno);
+        JPanel panelAlmuerzo = crearPlatilloPanel("Almuerzo", rutaImagenAlmuerzo, nombreAlmuerzo, precioCalculadoAlmuerzo, descAlmuerzo, infoNutricionalAlmuerzo);
         
         filaPlatillos.add(panelDesayuno);
         filaPlatillos.add(panelAlmuerzo);
         
-        contentPanel.add(menuTitle);
         contentPanel.add(filaPlatillos);
         
         centerPanel.add(contentPanel);

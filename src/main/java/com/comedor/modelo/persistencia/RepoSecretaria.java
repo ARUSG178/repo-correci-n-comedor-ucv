@@ -6,6 +6,7 @@ import java.util.List;
 import com.comedor.modelo.entidades.Empleado;
 import com.comedor.modelo.entidades.Estudiante;
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.entidades.Profesor;
 import com.comedor.util.ServicioUtil;
 
 public class RepoSecretaria {
@@ -21,21 +22,37 @@ public class RepoSecretaria {
 
             String tipo = datos[0];
             String cedula = datos[1];
+            String nombre = (datos.length > 2) ? datos[2].trim() : "";
 
             if (cedula.trim().equals(cedulaBuscada.trim())) {
                 // Encontramos la cédula, reconstruimos el objeto para validaros
+                Usuario usuario = null;
 
                 if (tipo.equalsIgnoreCase("Estudiante") && datos.length >= 5) {
-                    String carrera = datos[3];
-                    String facultad = datos[4];
-                    // Retornamos un objeto Estudiante con los datos de secretaría
-                    return new Estudiante(cedula, "", carrera, facultad);
+                    String carrera = datos[3].trim();
+                    String facultad = datos[4].trim();
+                    usuario = new Estudiante(cedula, "", carrera, facultad);
                 } 
                 else if (tipo.equalsIgnoreCase("Empleado") && datos.length >= 6) {
-                    String cargo = datos[3];
-                    String depto = datos[4];
-                    String codigo = datos[5];
-                    return new Empleado(cedula, "", cargo, depto, codigo);
+                    String cargo = datos[3].trim();
+                    String depto = datos[4].trim();
+                    String codigo = datos[5].trim();
+                    
+                    if (cargo.equalsIgnoreCase("Profesor")) {
+                        usuario = new Profesor(cedula, "", depto, codigo);
+                    } else {
+                        usuario = new Empleado(cedula, "", cargo, depto, codigo);
+                    }
+                }
+                else if (tipo.equalsIgnoreCase("Profesor") && datos.length >= 5) {
+                    String depto = datos[3].trim();
+                    String codigo = datos[4].trim();
+                    usuario = new Profesor(cedula, "", depto, codigo);
+                }
+
+                if (usuario != null) {
+                    usuario.setNombre(nombre); // Guardamos el nombre leído
+                    return usuario;
                 }
             }
         }

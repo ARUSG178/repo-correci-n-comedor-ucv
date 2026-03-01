@@ -29,7 +29,6 @@ import java.net.URL;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
-import com.comedor.vista.admin.PrincipalAdminUI;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;

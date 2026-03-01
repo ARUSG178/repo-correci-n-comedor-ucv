@@ -3,7 +3,11 @@ package com.comedor.controlador;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.excepciones.*;
 import com.comedor.modelo.persistencia.RepoUsuarios;
+import com.comedor.modelo.persistencia.RepoSecretaria;
+import com.comedor.modelo.entidades.Empleado;
+import com.comedor.modelo.entidades.Estudiante;
 import com.comedor.modelo.entidades.Administrador;
+import com.comedor.modelo.entidades.Profesor;
 import com.comedor.modelo.validaciones.VRegistro;
 import com.comedor.modelo.persistencia.RepoAdminCdg;
 
@@ -32,5 +36,36 @@ public class ServicioRegistro {
         }
 
         System.out.println("Usuario registrado exitosamente en el sistema. Cédula: " + nuevoUsuario.obtCedula());
+    }
+
+    // Método inteligente que detecta el tipo de usuario automáticamente
+    public void registrarUsuario(String cedula, String contr, String codigo) throws InvalidCredentialsException, DuplicateUserException, IOException {
+        Usuario nuevoUsuario;
+
+        // CASO 1: Registro como Administrador (si se provee código)
+        if (codigo != null && !codigo.trim().isEmpty()) {
+            nuevoUsuario = new Administrador(cedula, contr, codigo.trim());
+        } 
+        // CASO 2: Registro Automático (Estudiante, Empleado, Profesor)
+        else {
+            RepoSecretaria repoSec = new RepoSecretaria();
+            Usuario uSecretaria = repoSec.buscarRegistroUCV(cedula);
+
+            if (uSecretaria == null) {
+                throw new InvalidCredentialsException("La cédula " + cedula + " no figura en los registros de la UCV.");
+            }
+
+            if (uSecretaria instanceof Estudiante) {
+                nuevoUsuario = new Estudiante(cedula, contr, "", "");
+            } else if (uSecretaria instanceof Profesor) {
+                nuevoUsuario = new Profesor(cedula, contr, "", "");
+            } else {
+                // Aquí entran Empleados
+                nuevoUsuario = new Empleado(cedula, contr, "", "", "");
+            }
+        }
+
+        // Delegamos al método principal que valida y guarda (VRegistro se encargará de llenar los datos faltantes)
+        this.registrarUsuario(nuevoUsuario);
     }
 }

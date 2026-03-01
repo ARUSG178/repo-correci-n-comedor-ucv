@@ -3,6 +3,7 @@ package com.comedor.modelo.validaciones;
 import com.comedor.modelo.entidades.Empleado;
 import com.comedor.modelo.entidades.Estudiante;
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.entidades.Profesor;
 import com.comedor.modelo.excepciones.*;
 import com.comedor.util.ValidacionUtil;
 import com.comedor.modelo.entidades.Administrador;
@@ -52,6 +53,15 @@ public class VRegistro {
         return true;
     }
 
+    // Valida que los campos específicos de profesor no estén vacíos
+    boolean validarProfesor() {
+        if (uIngresado instanceof Profesor) {
+            Profesor prof = (Profesor) uIngresado;
+            return prof.obtDepartamento() != null && !prof.obtDepartamento().isEmpty();
+        }
+        return true;
+    }
+
     // Verifica que la cédula exista en la base de datos de la UCV y coincida el tipo de usuario
     void validarInscripcionUCV() throws InvalidCredentialsException, IOException {
         // Los administradores tienen su propio mecanismo de validación (código)
@@ -72,6 +82,23 @@ public class VRegistro {
                 "Inconsistencia de datos: La cédula ingresada está registrada en la UCV como " + 
                 uSecretaria.obtTipo() + ", pero intenta registrarse como " + uIngresado.obtTipo() + "."
             );
+        }
+
+        // AUTOFILL: Copiar datos de Secretaría al usuario ingresado para completar el registro
+        // Esto permite que la UI envíe solo Cédula y Contraseña.
+        // También copiamos el nombre, que ahora se lee desde secretaria.txt
+        uIngresado.setNombre(uSecretaria.obtNombre());
+
+        if (uIngresado instanceof Estudiante && uSecretaria instanceof Estudiante) {
+            ((Estudiante) uIngresado).setCarrera(((Estudiante) uSecretaria).obtCarrera());
+            ((Estudiante) uIngresado).setFacultad(((Estudiante) uSecretaria).obtFacultad());
+        } else if (uIngresado instanceof Empleado && uSecretaria instanceof Empleado) {
+            ((Empleado) uIngresado).setCargo(((Empleado) uSecretaria).obtCargo());
+            ((Empleado) uIngresado).setDepartamento(((Empleado) uSecretaria).obtDepartamento());
+            ((Empleado) uIngresado).setCodigoEmpleado(((Empleado) uSecretaria).obtCodigoEmpleado());
+        } else if (uIngresado instanceof Profesor && uSecretaria instanceof Profesor) {
+            ((Profesor) uIngresado).setDepartamento(((Profesor) uSecretaria).obtDepartamento());
+            ((Profesor) uIngresado).setCodigo(((Profesor) uSecretaria).obtCodigo());
         }
 
         // Aquí podrías agregar validaciones extra, como que la Carrera coincida con la de secretaría, etc.
@@ -107,6 +134,9 @@ public class VRegistro {
         }
         if (!validarEmpleado()) {
             throw new InvalidCredentialsException("Error en los datos de Empleado: El Cargo y/o Departamento no pueden estar vacíos.");
+        }
+        if (!validarProfesor()) {
+            throw new InvalidCredentialsException("Error en los datos de Profesor: El Departamento no puede estar vacío.");
         }
     }
 

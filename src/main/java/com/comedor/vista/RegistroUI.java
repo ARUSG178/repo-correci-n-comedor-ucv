@@ -1,13 +1,9 @@
 package com.comedor.vista;
 
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -28,15 +24,12 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -44,10 +37,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import com.comedor.controlador.ServicioRegistro;
-import com.comedor.modelo.entidades.Administrador;
-import com.comedor.modelo.entidades.Empleado;
-import com.comedor.modelo.entidades.Estudiante;
-import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.excepciones.DuplicateUserException;
 import com.comedor.modelo.excepciones.InvalidCredentialsException;
 
@@ -58,28 +47,15 @@ public class RegistroUI extends JFrame {
     private static final Color COLOR_OVERLAY = new Color(0, 51, 102, 140);      // Filtro sobre imagen
     private static final Color COLOR_FORM_BG = new Color(255, 255, 255);            // Fondo blanco
     private static final Color COLOR_INPUT_BG = new Color(0, 85, 170);            // Fondo azul claro inputs
-    private static final Color COLOR_RADIO_BLUE = new Color(0, 102, 204);          // Azul para los Radios
     private static final Color COLOR_BTN_AZUL = new Color(0, 60, 120);            // Botón Registrar
     private static final Color COLOR_PLACEHOLDER = new Color(255, 255, 255, 160); // Texto fantasma
 
     private BufferedImage backgroundImage;
-    private CardLayout cardLayout;
-    private JPanel specificFieldsPanel;
 
     private ModernTextField txtCedula;
     private ModernTextField txtContrasena;
 
-    private ModernTextField txtFacultad;
-    private ModernTextField txtCarrera;
-
-    private JRadioButton studentRadio;
-    private JRadioButton employeeRadio;
-    private JRadioButton adminRadio;
-
-    private ModernTextField txtCargo;
-    private ModernTextField txtDepartamento;
     private ModernTextField txtAdminCodigo;
-
     // Inicializa la ventana de registro y carga los recursos
     public RegistroUI() {
         try {
@@ -213,7 +189,7 @@ public class RegistroUI extends JFrame {
         
         JPanel formCard = new ShadowRoundedPanel(new GridBagLayout());
         formCard.setBackground(COLOR_FORM_BG);
-        formCard.setBorder(new EmptyBorder(40, 60, 45, 60));
+        formCard.setBorder(new EmptyBorder(60, 80, 70, 80));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -227,6 +203,7 @@ public class RegistroUI extends JFrame {
         formCard.add(titleLabel, gbc);
 
         txtCedula = new ModernTextField("Ej. 12345678");
+        txtCedula.setPreferredSize(new Dimension(350, 45));
         // Validación: Solo permitir números
         txtCedula.addKeyListener(new KeyAdapter() {
             @Override
@@ -240,59 +217,20 @@ public class RegistroUI extends JFrame {
         addLabelAndField(formCard, "Cédula:", txtCedula, gbc, 1);
 
         txtContrasena = new ModernTextField("Mín. 6 caracteres");
+        txtContrasena.setPreferredSize(new Dimension(350, 45));
         addLabelAndField(formCard, "Contraseña:", txtContrasena, gbc, 2);
 
-        JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-        radioPanel.setOpaque(false);
-        studentRadio = createCustomRadio("Estudiante");
-        employeeRadio = createCustomRadio("Empleado");
-        adminRadio = createCustomRadio("Administrador");
-        ButtonGroup group = new ButtonGroup();
-        group.add(studentRadio); group.add(employeeRadio); group.add(adminRadio);
-        studentRadio.setSelected(true);
-        radioPanel.add(studentRadio); radioPanel.add(employeeRadio); radioPanel.add(adminRadio);
-        gbc.gridy = 3; gbc.insets = new Insets(15, 0, 15, 0);
-        formCard.add(radioPanel, gbc);
-
-        cardLayout = new CardLayout();
-        specificFieldsPanel = new JPanel(cardLayout);
-        specificFieldsPanel.setOpaque(false);
-
-        JPanel pEst = new JPanel(new GridBagLayout()); pEst.setOpaque(false);
-        GridBagConstraints gbcSub = new GridBagConstraints();
-        gbcSub.fill = GridBagConstraints.HORIZONTAL; gbcSub.weightx = 1.0; gbcSub.gridx = 0;
-        txtFacultad = new ModernTextField("Ej. Ciencias");
-        addLabelAndField(pEst, "Facultad:", txtFacultad, gbcSub, 0);
-        txtCarrera = new ModernTextField("Ej. Computación");
-        addLabelAndField(pEst, "Carrera:", txtCarrera, gbcSub, 1);
-
-        JPanel pEmp = new JPanel(new GridBagLayout()); pEmp.setOpaque(false);
-        txtCargo = new ModernTextField("Ej. Profesor");
-        addLabelAndField(pEmp, "Cargo:", txtCargo, gbcSub, 0);
-        txtDepartamento = new ModernTextField("Ej. Docencia");
-        addLabelAndField(pEmp, "Departamento:", txtDepartamento, gbcSub, 1);
-
-        JPanel pAdm = new JPanel(new GridBagLayout()); pAdm.setOpaque(false);
-        txtAdminCodigo = new ModernTextField("8 caracteres alfanum.");
-        addLabelAndField(pAdm, "Código Admin:", txtAdminCodigo, gbcSub, 0);
-
-        specificFieldsPanel.add(pEst, "Estudiante");
-        specificFieldsPanel.add(pEmp, "Empleado");
-        specificFieldsPanel.add(pAdm, "Administrador");
-        gbc.gridy = 4; gbc.insets = new Insets(0, 0, 25, 0);
-        formCard.add(specificFieldsPanel, gbc);
+        txtAdminCodigo = new ModernTextField("Opcional (Solo Admin)");
+        txtAdminCodigo.setPreferredSize(new Dimension(350, 45));
+        addLabelAndField(formCard, "Código Admin:", txtAdminCodigo, gbc, 3);
 
         JButton btnReg = new JButton("REGISTRAR");
         styleButton(btnReg);
         btnReg.addActionListener(e -> ejecutarRegistro());
-        gbc.gridy = 5; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridy = 4; gbc.insets = new Insets(25, 0, 15, 0); gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
         formCard.add(btnReg, gbc);
 
         centeringSpace.add(formCard, new GridBagConstraints());
-
-        studentRadio.addActionListener(e -> cardLayout.show(specificFieldsPanel, "Estudiante"));
-        employeeRadio.addActionListener(e -> cardLayout.show(specificFieldsPanel, "Empleado"));
-        adminRadio.addActionListener(e -> cardLayout.show(specificFieldsPanel, "Administrador"));
 
         return centeringSpace;
     }
@@ -301,41 +239,16 @@ public class RegistroUI extends JFrame {
     private void ejecutarRegistro() {
         String cedula = txtCedula.getText().trim();
         String contr = txtContrasena.getText();
+        String codigo = txtAdminCodigo.getText().trim();
 
         if (cedula.isEmpty() || contr.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Los campos Cédula y Contraseña son obligatorios.", "Campos Incompletos", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Usuario nuevo = null;
-        if (studentRadio.isSelected()) {
-            String carrera = txtCarrera.getText().trim();
-            String facultad = txtFacultad.getText().trim();
-            if (facultad.isEmpty() || carrera.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Para registrarse como Estudiante, los campos Facultad y Carrera son obligatorios.", "Campos Incompletos", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            nuevo = new Estudiante(cedula, contr, carrera, facultad);
-        } else if (employeeRadio.isSelected()) {
-            String cargo = txtCargo.getText().trim();
-            String departamento = txtDepartamento.getText().trim();
-            if (cargo.isEmpty() || departamento.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Para registrarse como Empleado, los campos Cargo y Departamento son obligatorios.", "Campos Incompletos", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            nuevo = new Empleado(cedula, contr, cargo, departamento, "0000");
-        } else { 
-            String codigo = txtAdminCodigo.getText().trim();
-            if (codigo.isEmpty() || !codigo.matches("[A-Za-z0-9]{8}")) {
-                JOptionPane.showMessageDialog(this, "El Código de Administrador es obligatorio y debe tener 8 caracteres alfanuméricos.", "Código Inválido", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            nuevo = new Administrador(cedula, contr, codigo);
-        }
-
         ServicioRegistro servicio = new ServicioRegistro();
         try {
-            servicio.registrarUsuario(nuevo);
+            servicio.registrarUsuario(cedula, contr, codigo);
             JOptionPane.showMessageDialog(this, "Usuario registrado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             SwingUtilities.invokeLater(() -> {
                 new InicioSesionUI().setVisible(true);
@@ -371,38 +284,6 @@ public class RegistroUI extends JFrame {
             super.paintComponent(g);
             g2.dispose();
         }
-    }
-
-    // Crea un botón de radio personalizado
-    private JRadioButton createCustomRadio(String texto) {
-        JRadioButton radio = new JRadioButton(texto);
-        radio.setOpaque(false);
-        radio.setFocusPainted(false);
-        radio.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        radio.setForeground(COLOR_AZUL_INST);
-        radio.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        radio.setIcon(new CustomRadioIcon(false));
-        radio.setSelectedIcon(new CustomRadioIcon(true));
-        return radio;
-    }
-
-    // Icono personalizado para los botones de radio
-    private static class CustomRadioIcon implements Icon {
-        private boolean sel;
-        public CustomRadioIcon(boolean sel) { this.sel = sel; }
-        @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(COLOR_RADIO_BLUE);
-            g2.setStroke(new BasicStroke(2.0f));
-            g2.drawOval(x, y + 2, 16, 16); // Círculo exterior
-            if (sel) g2.fillOval(x + 4, y + 6, 9, 9); // Punto interior
-            g2.dispose();
-        }
-        @Override public int getIconWidth() { return 25; }
-        @Override public int getIconHeight() { return 20; }
     }
 
     // Panel con bordes redondeados y sombra

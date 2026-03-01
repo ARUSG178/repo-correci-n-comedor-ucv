@@ -1,6 +1,7 @@
 package com.comedor.modelo.entidades;
 
 public abstract class Usuario {
+    private String nombre;
     private final String cedula;  
     private String contraseña;
     private boolean estado;
@@ -9,12 +10,19 @@ public abstract class Usuario {
 
     // Inicializa un usuario con valores por defecto
     public Usuario() {
+        this.nombre = "";
         this.cedula = "";
         this.contraseña = "";
     }
+
+    // Constructor para registro inicial (Nombre se rellena después desde Secretaría)
+    public Usuario(String cedula, String contraseña) {
+        this("", cedula, contraseña);
+    }
     
     // Inicializa un usuario con credenciales y estado activo por defecto
-    public Usuario(String cedula, String contraseña) {
+    public Usuario(String nombre, String cedula, String contraseña) {
+        this.nombre = nombre;
         this.cedula = cedula;
         this.contraseña = contraseña;
         this.estado = true;      
@@ -22,9 +30,10 @@ public abstract class Usuario {
         this.saldo = 0.0;
     }
 
+    // Retorna el nombre del usuario
+    public String obtNombre() { return nombre; }
     // Retorna el número de cédula del usuario
     public String obtCedula() { return cedula; }
-    
     // Retorna la contraseña del usuario
     public String obtContraseña() { return contraseña; }
     
@@ -37,6 +46,7 @@ public abstract class Usuario {
     // Retorna el saldo actual disponible en el monedero
     public double obtSaldo() { return saldo; }
 
+    public void setNombre(String nombre) { this.nombre = nombre; }
     // Actualiza la contraseña del usuario
     public void setContraseña(String contraseña) { this.contraseña = contraseña; }
     

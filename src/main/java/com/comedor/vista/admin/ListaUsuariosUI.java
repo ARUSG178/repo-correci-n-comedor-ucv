@@ -32,6 +32,7 @@ import javax.swing.table.DefaultTableModel;
 import com.comedor.modelo.entidades.Administrador;
 import com.comedor.modelo.entidades.Empleado;
 import com.comedor.modelo.entidades.Estudiante;
+import com.comedor.modelo.entidades.Profesor;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.persistencia.RepoUsuarios;
 
@@ -191,6 +192,10 @@ public class ListaUsuariosUI extends JFrame {
                     Empleado emp = (Empleado) u;
                     detalle1 = emp.obtCargo();
                     detalle2 = emp.obtDepartamento();
+                } else if (u instanceof Profesor) {
+                    Profesor prof = (Profesor) u;
+                    detalle1 = "Profesor";
+                    detalle2 = prof.obtDepartamento();
                 } else if (u instanceof Administrador) {
                     detalle1 = "Admin";
                 }

@@ -31,8 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 
-import com.comedor.vista.admin.PrincipalAdminUI;
-import com.comedor.vista.InicioSesionUI;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -46,6 +44,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -66,11 +65,15 @@ public class MenuAdminUI extends JFrame {
     private String[] rutasImagenes = new String[2];
     private String[] nombresPlatillos = new String[2];
     private String[] preciosPlatillos = new String[2];
+    private String[] descripcionesPlatillos = new String[2];
+    private String[] nutricionPlatillos = new String[2];
 
     // Componentes para los platillos
     private JLabel[] labelsImagen = new JLabel[2];
     private JTextField[] fieldsNombre = new JTextField[2];
     private JTextField[] fieldsPrecio = new JTextField[2];
+    private JTextArea[] areasDescripcion = new JTextArea[2];
+    private JTextArea[] areasNutricion = new JTextArea[2];
 
     // Inicializa la interfaz de administración del menú.
     public MenuAdminUI() {
@@ -94,9 +97,13 @@ public class MenuAdminUI extends JFrame {
         rutasImagenes[0] = "/com/comedor/resources/images/menu/base.jpg";
         nombresPlatillos[0] = "Desayuno";
         preciosPlatillos[0] = "$ 0.00";
+        descripcionesPlatillos[0] = "";
+        nutricionPlatillos[0] = "";
         rutasImagenes[1] = "/com/comedor/resources/images/menu/base.jpg";
         nombresPlatillos[1] = "Almuerzo";
         preciosPlatillos[1] = "$ 0.00";
+        descripcionesPlatillos[1] = "";
+        nutricionPlatillos[1] = "";
     }
     
     private void cargarConfiguracion() {
@@ -106,10 +113,14 @@ public class MenuAdminUI extends JFrame {
             nombresPlatillos[0] = props.getProperty("desayuno_nombre", "Desayuno");
             preciosPlatillos[0] = props.getProperty("desayuno_precio", "$ 0.00");
             rutasImagenes[0] = props.getProperty("desayuno_imagen", "/com/comedor/resources/images/menu/base.jpg");
+            descripcionesPlatillos[0] = props.getProperty("desayuno_descripcion", "");
+            nutricionPlatillos[0] = props.getProperty("desayuno_nutricion", "");
 
             nombresPlatillos[1] = props.getProperty("almuerzo_nombre", "Almuerzo");
             preciosPlatillos[1] = props.getProperty("almuerzo_precio", "$ 0.00");
             rutasImagenes[1] = props.getProperty("almuerzo_imagen", "/com/comedor/resources/images/menu/base.jpg");
+            descripcionesPlatillos[1] = props.getProperty("almuerzo_descripcion", "");
+            nutricionPlatillos[1] = props.getProperty("almuerzo_nutricion", "");
         } catch (IOException e) {
             inicializarDatosEjemplo();
         }
@@ -181,33 +192,16 @@ public class MenuAdminUI extends JFrame {
         return new ImageIcon(imagen);
     }
     
-    private JLabel createTabLabel(String text) {
-        JLabel tab = new JLabel(text);
-        tab.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        tab.setForeground(Color.WHITE);
-        tab.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        tab.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                tab.setForeground(new Color(255, 255, 255, 220));
-                tab.setFont(new Font("Segoe UI", Font.BOLD, 19));
-            }
-            
-            @Override
-            public void mouseExited(MouseEvent e) {
-                tab.setForeground(Color.WHITE);
-                tab.setFont(new Font("Segoe UI", Font.BOLD, 18));
-            }
-        });
-        
-        return tab;
-    }
-
     private JPanel crearPanelPlatillo(int indice, String titulo) {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout(10, 10));
         panel.setOpaque(false);
+        
+        // Título del platillo (Agregado para coincidir con el orden visual de MenuUserUI)
+        JLabel lblTitulo = new JLabel(titulo, SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblTitulo.setForeground(Color.WHITE);
+        panel.add(lblTitulo, BorderLayout.NORTH);
         
         // Panel para la imagen (Reducido de 400x500 a 280x350)
         JPanel panelImagen = new JPanel(new GridBagLayout());
@@ -236,7 +230,8 @@ public class MenuAdminUI extends JFrame {
         });
         
         // Panel para el nombre y precio
-        JPanel panelInfo = new JPanel(new BorderLayout(5, 5));
+        JPanel panelInfo = new JPanel();
+        panelInfo.setLayout(new BoxLayout(panelInfo, BoxLayout.Y_AXIS));
         panelInfo.setOpaque(false);
         panelInfo.setBorder(new EmptyBorder(8, 0, 0, 0));
         
@@ -283,8 +278,46 @@ public class MenuAdminUI extends JFrame {
         panelPrecio.add(labelPrecio, BorderLayout.NORTH);
         panelPrecio.add(fieldsPrecio[indice], BorderLayout.CENTER);
         
-        panelInfo.add(panelNombre, BorderLayout.NORTH);
-        panelInfo.add(panelPrecio, BorderLayout.CENTER);
+        // Descripción
+        JPanel panelDesc = new JPanel(new BorderLayout(2, 2));
+        panelDesc.setOpaque(false);
+        panelDesc.setBorder(new EmptyBorder(5, 0, 0, 0));
+        
+        JLabel labelDesc = new JLabel("Descripción:");
+        labelDesc.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        labelDesc.setForeground(Color.WHITE);
+        
+        areasDescripcion[indice] = new JTextArea(descripcionesPlatillos[indice], 3, 20);
+        areasDescripcion[indice].setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        areasDescripcion[indice].setLineWrap(true);
+        areasDescripcion[indice].setWrapStyleWord(true);
+        JScrollPane scrollDesc = new JScrollPane(areasDescripcion[indice]);
+        
+        panelDesc.add(labelDesc, BorderLayout.NORTH);
+        panelDesc.add(scrollDesc, BorderLayout.CENTER);
+
+        // Nutrición
+        JPanel panelNutri = new JPanel(new BorderLayout(2, 2));
+        panelNutri.setOpaque(false);
+        panelNutri.setBorder(new EmptyBorder(5, 0, 0, 0));
+        
+        JLabel labelNutri = new JLabel("Info Nutricional:");
+        labelNutri.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        labelNutri.setForeground(Color.WHITE);
+        
+        areasNutricion[indice] = new JTextArea(nutricionPlatillos[indice], 3, 20);
+        areasNutricion[indice].setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        areasNutricion[indice].setLineWrap(true);
+        areasNutricion[indice].setWrapStyleWord(true);
+        JScrollPane scrollNutri = new JScrollPane(areasNutricion[indice]);
+        
+        panelNutri.add(labelNutri, BorderLayout.NORTH);
+        panelNutri.add(scrollNutri, BorderLayout.CENTER);
+
+        panelInfo.add(panelNombre);
+        panelInfo.add(panelPrecio);
+        panelInfo.add(panelDesc);
+        panelInfo.add(panelNutri);
         
         // Botón explícito para cargar imagen
         JButton btnCargar = new JButton("CAMBIAR FOTO");
@@ -402,6 +435,10 @@ public class MenuAdminUI extends JFrame {
                     fieldsPrecio[i].setText(preciosPlatillos[i]);
                 }
             }
+            
+            // Actualizar descripción y nutrición
+            descripcionesPlatillos[i] = areasDescripcion[i].getText().trim();
+            nutricionPlatillos[i] = areasNutricion[i].getText().trim();
         }
         
         // Guardar en archivo de propiedades
@@ -417,9 +454,13 @@ public class MenuAdminUI extends JFrame {
             props.setProperty("desayuno_nombre", nombresPlatillos[0]);
             props.setProperty("desayuno_precio", preciosPlatillos[0]);
             props.setProperty("desayuno_imagen", rutasImagenes[0]);
+            props.setProperty("desayuno_descripcion", descripcionesPlatillos[0]);
+            props.setProperty("desayuno_nutricion", nutricionPlatillos[0]);
             props.setProperty("almuerzo_nombre", nombresPlatillos[1]);
             props.setProperty("almuerzo_precio", preciosPlatillos[1]);
             props.setProperty("almuerzo_imagen", rutasImagenes[1]);
+            props.setProperty("almuerzo_descripcion", descripcionesPlatillos[1]);
+            props.setProperty("almuerzo_nutricion", nutricionPlatillos[1]);
             props.store(out, "Configuracion del Menu");
             JOptionPane.showMessageDialog(this, "✅ Configuración guardada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {

@@ -2,7 +2,7 @@ package com.comedor.vista.usuario;
 
 import com.comedor.controlador.ServicioBiometrico;
 import com.comedor.controlador.ServicioPago;
-import com.comedor.vista.usuario.PrincipalUserUI;
+import com.comedor.modelo.persistencia.RepoUsuarios;
 import com.comedor.modelo.entidades.Usuario;
 
 import javax.imageio.ImageIO;
@@ -13,9 +13,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Properties;
 
 public class ReconocimientoFacialUI extends JFrame {
 
@@ -98,10 +101,7 @@ public class ReconocimientoFacialUI extends JFrame {
         btnBack.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Regresar a selección de turno
-                // Se necesita el tipo de comida para reconstruir la UI de turnos
-                String tipoComida = (fechaReserva.getHour() < 11) ? "Desayuno" : "Almuerzo";
-                new SeleccionarTurnoUI(usuario, costoPlatillo, tipoComida).setVisible(true);
+                // Al ser un módulo separado, simplemente se cierra.
                 dispose();
             }
         });
@@ -219,11 +219,57 @@ public class ReconocimientoFacialUI extends JFrame {
                 String mensaje = String.format("¡Pago Exitoso!\nSimilitud Biométrica: %.2f%%\nReserva confirmada para: %s", 
                                              similitud, fechaReserva.toString().replace("T", " "));
                 JOptionPane.showMessageDialog(this, mensaje, "Acceso Concedido", JOptionPane.INFORMATION_MESSAGE);
-                new PrincipalUserUI(usuario).setVisible(true);
+                // Al ser un módulo separado, se cierra tras el éxito.
                 dispose();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Fallo", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Resultado de Verificación", JOptionPane.ERROR_MESSAGE);
             lblEstado.setText("Intente nuevamente.");
         }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            Properties props = new Properties();
+            File requestFile = new File("verification_request.properties");
+
+            if (!requestFile.exists()) {
+                JOptionPane.showMessageDialog(null, "No se encontró una solicitud de verificación pendiente.", "Módulo Biométrico", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try (FileInputStream in = new FileInputStream(requestFile)) {
+                props.load(in);
+
+                String cedula = props.getProperty("cedula");
+                double costo = Double.parseDouble(props.getProperty("costo"));
+                LocalDateTime fecha = LocalDateTime.parse(props.getProperty("fechaReserva"));
+
+                if (cedula == null || cedula.isEmpty()) {
+                    throw new Exception("El archivo de solicitud no contiene una cédula válida.");
+                }
+
+                // Buscar al usuario completo en la base de datos de usuarios
+                RepoUsuarios repoUsuarios = new RepoUsuarios();
+                List<Usuario> usuarios = repoUsuarios.listarUsuarios();
+                Usuario usuarioAVerificar = usuarios.stream()
+                        .filter(u -> u.obtCedula().equals(cedula))
+                        .findFirst()
+                        .orElse(null);
+
+                if (usuarioAVerificar == null) {
+                    throw new Exception("No se encontró al usuario con cédula " + cedula + " en la base de datos.");
+                }
+
+                // Una vez que tenemos todos los datos, lanzamos la UI
+                new ReconocimientoFacialUI(usuarioAVerificar, costo, fecha).setVisible(true);
+
+                // Borrar el archivo de solicitud para que no se reutilice
+                requestFile.delete();
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Error al iniciar el módulo de verificación:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        });
     }
 }
