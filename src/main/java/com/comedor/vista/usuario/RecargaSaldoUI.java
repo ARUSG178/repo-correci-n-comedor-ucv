@@ -2,33 +2,27 @@ package com.comedor.vista.usuario;
 
 import com.comedor.modelo.entidades.Usuario;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.URL;
 import javax.swing.border.EmptyBorder;
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class RecargaSaldoUI extends JFrame {
 
     private static final Color COLOR_AZUL_INST = new Color(0, 51, 102);
-    private static final Color COLOR_OVERLAY = new Color(0, 51, 102, 140);
 
     private final Usuario usuario;
     private final Runnable onRecargaExitosa;
-    private BufferedImage backgroundImage;
+
+    private final CardLayout cards = new CardLayout();
+    private JPanel cardsPanel;
+    private SegmentedRecargaToggle toggle;
 
     public RecargaSaldoUI(Usuario usuario, Runnable onRecargaExitosa) {
         this.usuario = usuario;
         this.onRecargaExitosa = onRecargaExitosa;
-
-        try {
-            URL imageUrl = getClass().getResource("/com/comedor/resources/images/registro_e_inicio_sesion/com_reg_bg.jpg");
-            if (imageUrl != null) backgroundImage = ImageIO.read(imageUrl);
-        } catch (IOException e) {
-            System.err.println("Imagen de fondo no encontrada.");
-        }
 
         configurarVentana();
         initUI();
@@ -36,48 +30,16 @@ public class RecargaSaldoUI extends JFrame {
 
     private void configurarVentana() {
         setTitle("Recargar Saldo - SAGC UCV");
-        setSize(900, 700);
-        setMinimumSize(new Dimension(800, 600));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
     }
 
     private void initUI() {
-        // Panel de fondo con overlay
-        JPanel backgroundPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                if (backgroundImage != null) {
-                    g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-                }
-                // Overlay difuminado
-                g2d.setColor(COLOR_OVERLAY);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        backgroundPanel.setLayout(new BorderLayout());
-        setContentPane(backgroundPanel);
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(Color.WHITE);
+        root.setBorder(new EmptyBorder(18, 18, 18, 18));
 
-        // Header azul
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(COLOR_AZUL_INST);
-        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
-        JLabel headerTitle = new JLabel("Recargar Saldo", SwingConstants.CENTER);
-        headerTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        headerTitle.setForeground(Color.WHITE);
-        headerPanel.add(headerTitle, BorderLayout.CENTER);
-        backgroundPanel.add(headerPanel, BorderLayout.NORTH);
-
-        // Bottom bar azul
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setBackground(COLOR_AZUL_INST);
-        bottomPanel.setPreferredSize(new Dimension(getWidth(), 30));
-        backgroundPanel.add(bottomPanel, BorderLayout.SOUTH);
-
-        // Panel central blanco con bordes redondeados
         JPanel centerPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -89,22 +51,106 @@ public class RecargaSaldoUI extends JFrame {
             }
         };
         centerPanel.setOpaque(false);
-        centerPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
+        centerPanel.setBorder(new EmptyBorder(22, 26, 22, 26));
         centerPanel.setLayout(new BorderLayout());
 
-        // Panel de recarga (reutilizamos PRecarga)
+        JPanel body = new JPanel();
+        body.setOpaque(false);
+        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+
+        toggle = new SegmentedRecargaToggle();
+        toggle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        body.add(toggle);
+        body.add(Box.createRigidArea(new Dimension(0, 18)));
+
+        cardsPanel = new JPanel(cards);
+        cardsPanel.setOpaque(false);
+
         PRecarga panelRecarga = new PRecarga(usuario, () -> {
             if (onRecargaExitosa != null) onRecargaExitosa.run();
             dispose();
-        });
-        centerPanel.add(panelRecarga, BorderLayout.CENTER);
+        }, false);
 
-        // Contenedor para centrar el panel blanco
-        JPanel wrapper = new JPanel(new GridBagLayout());
-        wrapper.setOpaque(false);
-        wrapper.add(centerPanel, new GridBagConstraints());
+        PRecarga panelSaldoPana = new PRecarga(usuario, () -> {
+            if (onRecargaExitosa != null) onRecargaExitosa.run();
+            dispose();
+        }, true);
 
-        backgroundPanel.add(wrapper, BorderLayout.CENTER);
+        cardsPanel.add(panelRecarga, "RECARGAR");
+        cardsPanel.add(panelSaldoPana, "PANA");
+
+        body.add(cardsPanel);
+        centerPanel.add(body, BorderLayout.CENTER);
+
+        root.add(centerPanel, BorderLayout.CENTER);
+        setContentPane(root);
+
+        mostrarRecargar();
+
+        pack();
+        setLocationRelativeTo(null);
+    }
+
+    private void mostrarRecargar() {
+        cards.show(cardsPanel, "RECARGAR");
+        if (toggle != null) toggle.setSelected(Mode.RECARGAR);
+    }
+
+    private void mostrarSaldoPana() {
+        cards.show(cardsPanel, "PANA");
+        if (toggle != null) toggle.setSelected(Mode.PANA);
+    }
+
+    private enum Mode { RECARGAR, PANA }
+
+    private class SegmentedRecargaToggle extends JPanel {
+        private final JLabel left = new JLabel("Recargar", SwingConstants.CENTER);
+        private final JLabel right = new JLabel("Saldo Pana", SwingConstants.CENTER);
+        private Mode selected = Mode.RECARGAR;
+
+        SegmentedRecargaToggle() {
+            setOpaque(false);
+            setLayout(new GridLayout(1, 2));
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
+
+            configurarLabel(left, Mode.RECARGAR);
+            configurarLabel(right, Mode.PANA);
+            add(left);
+            add(right);
+            setSelected(Mode.RECARGAR);
+        }
+
+        private void configurarLabel(JLabel label, Mode mode) {
+            label.setOpaque(true);
+            label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            label.setBorder(new EmptyBorder(14, 10, 14, 10));
+            label.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (mode == Mode.RECARGAR) {
+                        mostrarRecargar();
+                    } else {
+                        mostrarSaldoPana();
+                    }
+                }
+            });
+        }
+
+        void setSelected(Mode mode) {
+            this.selected = mode;
+
+            Color activeBg = new Color(255, 255, 255);
+            Color activeFg = COLOR_AZUL_INST;
+            Color inactiveBg = new Color(230, 235, 245);
+            Color inactiveFg = new Color(0, 51, 102, 160);
+
+            boolean leftActive = selected == Mode.RECARGAR;
+            left.setBackground(leftActive ? activeBg : inactiveBg);
+            left.setForeground(leftActive ? activeFg : inactiveFg);
+            right.setBackground(!leftActive ? activeBg : inactiveBg);
+            right.setForeground(!leftActive ? activeFg : inactiveFg);
+        }
     }
 
     public static void main(String[] args) {

@@ -6,9 +6,12 @@ import java.util.List;
 
 import com.comedor.modelo.entidades.Administrador;
 import com.comedor.modelo.entidades.Estudiante;
+import com.comedor.modelo.entidades.EstudianteBecario;
+import com.comedor.modelo.entidades.EstudianteExonerado;
 import com.comedor.modelo.entidades.Empleado;
 import com.comedor.modelo.entidades.Profesor;
 import com.comedor.modelo.entidades.Usuario;
+
 import com.comedor.util.ServicioUtil;
 
 public class RepoUsuarios {
@@ -90,6 +93,10 @@ public class RepoUsuarios {
             // Los índices de los datos específicos se desplazan en 1
             if (tipo.equals("Estudiante") && datos.length >= 9) {
                 usuario = new Estudiante(cedula, contraseña, datos[7], datos[8]);
+            } else if (tipo.equals("EstudianteExonerado") && datos.length >= 9) {
+                usuario = new EstudianteExonerado(cedula, contraseña, datos[7], datos[8]);
+            } else if (tipo.equals("EstudianteBecario") && datos.length >= 9) {
+                usuario = new EstudianteBecario(cedula, contraseña, datos[7], datos[8]);
             } else if (tipo.equals("Empleado") && datos.length >= 10) {
                 usuario = new Empleado(cedula, contraseña, datos[7], datos[8], datos[9]);
             } else if (tipo.equals("Profesor") && datos.length >= 9) {

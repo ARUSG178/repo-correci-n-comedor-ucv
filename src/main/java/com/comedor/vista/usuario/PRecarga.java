@@ -26,7 +26,10 @@ public class PRecarga extends JPanel {
     private JComboBox<String> cmbBanco;
     private JTextField txtReferencia;
     private JTextField txtMontoRecarga;
+    private JTextField txtCedulaDestino;
     private JButton btnRecargar;
+
+    private final boolean mostrarCedulaDestino;
 
     private Color uiColor(String key, Color fallback) {
         Color c = UIManager.getColor(key);
@@ -35,10 +38,15 @@ public class PRecarga extends JPanel {
 
     // Constructor principal
     public PRecarga(Usuario usuario, Runnable alRecargar) {
+        this(usuario, alRecargar, true);
+    }
+
+    public PRecarga(Usuario usuario, Runnable alRecargar, boolean mostrarCedulaDestino) {
         this.usuario = usuario;
         this.monedero = new Monedero(usuario);
         this.alRecargar = alRecargar;
         this.servicioCosto = new ServicioCosto();
+        this.mostrarCedulaDestino = mostrarCedulaDestino;
         
         initUI();
         actualizarSaldoVisual();
@@ -104,6 +112,18 @@ public class PRecarga extends JPanel {
         txtReferencia.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtReferencia.setToolTipText("Número de referencia");
 
+        txtCedulaDestino = new JTextField(12);
+        txtCedulaDestino.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtCedulaDestino.setToolTipText("Cédula de otro comensal (opcional)");
+        txtCedulaDestino.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
+                    e.consume();
+                }
+            }
+        });
+
         btnRecargar = new JButton("Recargar");
         btnRecargar.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnRecargar.setBackground(uiColor("Comedor.azulInst", new Color(0, 51, 102)));
@@ -145,15 +165,25 @@ public class PRecarga extends JPanel {
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         panelAccion.add(txtReferencia, gbc);
 
+        int rowMonto = 2;
+        if (mostrarCedulaDestino) {
+            gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
+            panelAccion.add(crearLabelConIcono("🤝", "Cédula destino:"), gbc);
+
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            panelAccion.add(txtCedulaDestino, gbc);
+            rowMonto = 3;
+        }
+
         // Fila 3: Monto
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = rowMonto; gbc.fill = GridBagConstraints.NONE;
         panelAccion.add(crearLabelConIcono("💵", "Monto ($):"), gbc);
         
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         panelAccion.add(txtMontoRecarga, gbc);
 
         // Fila 4: Botón
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = rowMonto + 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
         gbc.insets = new Insets(20, 5, 5, 5);
         panelAccion.add(btnRecargar, gbc);
 
@@ -161,8 +191,13 @@ public class PRecarga extends JPanel {
         add(panelAccion, BorderLayout.CENTER);
         
         // Tamaño preferido para que se vea bien en el centro
-        setPreferredSize(new Dimension(420, 340));
-        setMaximumSize(new Dimension(450, 360));
+        if (mostrarCedulaDestino) {
+            setPreferredSize(new Dimension(460, 390));
+            setMaximumSize(new Dimension(500, 420));
+        } else {
+            setPreferredSize(new Dimension(420, 340));
+            setMaximumSize(new Dimension(450, 360));
+        }
     }
 
     // Dibuja el fondo redondeado del panel
@@ -193,6 +228,7 @@ public class PRecarga extends JPanel {
         String textoMonto = txtMontoRecarga.getText().trim();
         String banco = (String) cmbBanco.getSelectedItem();
         String referencia = txtReferencia.getText().trim();
+        String cedulaDestino = mostrarCedulaDestino ? txtCedulaDestino.getText().trim() : "";
         
         if (textoMonto.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Por favor ingrese un monto.", "Error", JOptionPane.WARNING_MESSAGE);
@@ -217,12 +253,15 @@ public class PRecarga extends JPanel {
             }
 
             // 1. Delegar la recarga al servicio (Valida banco, referencia y persiste)
-            servicioCosto.procesarRecarga(usuario, monto, banco, referencia);
+            servicioCosto.procesarRecarga(usuario, monto, banco, referencia, cedulaDestino);
             
             // 2. Actualizar UI interna
             actualizarSaldoVisual();
             txtMontoRecarga.setText("");
             txtReferencia.setText("");
+            if (mostrarCedulaDestino) {
+                txtCedulaDestino.setText("");
+            }
             cmbBanco.setSelectedIndex(0);
             
             // 4. Notificar a la ventana padre para que actualice otros componentes

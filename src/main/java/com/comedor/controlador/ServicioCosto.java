@@ -108,9 +108,14 @@ public class ServicioCosto {
 
     // Procesa la recarga de saldo validando los datos y persistiendo el cambio
     public void procesarRecarga(Usuario usuario, double monto, String banco, String referencia) throws Exception {
+        procesarRecarga(usuario, monto, banco, referencia, null);
+    }
+
+    public void procesarRecarga(Usuario usuario, double monto, String banco, String referencia, String cedulaDestino) throws Exception {
         if (monto <= 0) {
             throw new IllegalArgumentException("El monto a recargar debe ser mayor a 0.");
         }
+
         if (banco == null || banco.trim().isEmpty()) {
             throw new IllegalArgumentException("Debe seleccionar un banco de procedencia.");
         }
@@ -118,15 +123,19 @@ public class ServicioCosto {
             throw new IllegalArgumentException("Debe ingresar el número de referencia de la transacción.");
         }
 
+        String destino = (cedulaDestino == null || cedulaDestino.trim().isEmpty()) ? usuario.obtCedula() : cedulaDestino.trim();
+
         RepoUsuarios repo = new RepoUsuarios();
         List<Usuario> usuarios = repo.listarUsuarios();
         boolean encontrado = false;
 
         for (Usuario u : usuarios) {
-            if (u.obtCedula().equals(usuario.obtCedula())) {
+            if (u.obtCedula().equals(destino)) {
                 double nuevoSaldo = u.obtSaldo() + monto;
                 u.setSaldo(nuevoSaldo);
-                usuario.setSaldo(nuevoSaldo); // Actualizar el objeto en memoria de la sesión actual
+                if (usuario != null && usuario.obtCedula().equals(destino)) {
+                    usuario.setSaldo(nuevoSaldo); // Actualizar el objeto en memoria de la sesión actual
+                }
                 encontrado = true;
                 break;
             }

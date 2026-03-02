@@ -216,8 +216,11 @@ public class ReconocimientoFacialUI extends JFrame {
             double similitud = sBiometrico.calcularSimilitud(usuario, archivoSeleccionado);
             
             if (similitud <= 60.0) {
-                throw new BiometriaFallidaException(String.format("Biometría fallida.\nSimilitud: %.2f%%\nSe requiere > 60%%", similitud));
+                lblEstado.setText("Usuario inválido");
+                throw new BiometriaFallidaException("Usuario inválido");
             }
+
+            lblEstado.setText("Usuario válido");
 
             // 2. Delegar cobro
             ServicioPago sPago = new ServicioPago();
@@ -241,12 +244,10 @@ public class ReconocimientoFacialUI extends JFrame {
                 System.err.println("Error al actualizar historial: " + ex.getMessage());
             }
 
-            // Si no hubo excepciones, todo fue exitoso
-                String mensaje = String.format("¡Pago Exitoso!\nSimilitud Biométrica: %.2f%%\nReserva confirmada para: %s\n\nEl historial ha sido actualizado.", 
-                                             similitud, fechaReserva.toString().replace("T", " "));
-                JOptionPane.showMessageDialog(this, mensaje, "Acceso Concedido", JOptionPane.INFORMATION_MESSAGE);
-                // Al ser un módulo separado, se cierra tras el éxito.
-                dispose();
+            String mensaje = String.format("¡Pago Exitoso!\nUsuario válido\nReserva confirmada para: %s\n\nEl historial ha sido actualizado.",
+                    fechaReserva.toString().replace("T", " "));
+            JOptionPane.showMessageDialog(this, mensaje, "Acceso Concedido", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Resultado de Verificación", JOptionPane.ERROR_MESSAGE);
             lblEstado.setText("Intente nuevamente.");

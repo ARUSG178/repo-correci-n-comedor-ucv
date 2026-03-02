@@ -18,7 +18,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -62,7 +61,7 @@ public class RegistroUI extends JFrame {
         try {
             URL imageUrl = getClass().getResource("/com/comedor/resources/images/registro_e_inicio_sesion/com_reg_bg.jpg");
             if (imageUrl != null) backgroundImage = ImageIO.read(imageUrl);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Imagen de fondo no encontrada.");
         }
         
@@ -145,7 +144,7 @@ public class RegistroUI extends JFrame {
         brandLabel.addMouseListener(new MouseAdapter() {
             @Override 
             public void mouseClicked(MouseEvent e) {
-                new InicioSesionUI().setVisible(true);
+                new InicioSesionUI(false).setVisible(true);
                 RegistroUI.this.dispose();
             }
         });
@@ -154,7 +153,7 @@ public class RegistroUI extends JFrame {
             @Override 
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_UP) {
-                    new InicioSesionUI().setVisible(true);
+                    new InicioSesionUI(false).setVisible(true);
                     RegistroUI.this.dispose();
                 }
             }
@@ -253,13 +252,13 @@ public class RegistroUI extends JFrame {
             servicio.registrarUsuario(cedula, contr, codigo);
             JOptionPane.showMessageDialog(this, "Usuario registrado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             SwingUtilities.invokeLater(() -> {
-                new InicioSesionUI().setVisible(true);
+                new InicioSesionUI(false).setVisible(true);
                 dispose();
             });
         } catch (DuplicateUserException | InvalidCredentialsException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de validación", JOptionPane.ERROR_MESSAGE);
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error al guardar en disco: " + ex.getMessage(), "Error IO", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al registrar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -272,6 +271,7 @@ public class RegistroUI extends JFrame {
             setFont(new Font("Segoe UI", Font.PLAIN, 14));
             addKeyListener(new KeyAdapter() { @Override public void keyReleased(KeyEvent e) { repaint(); } });
         }
+
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();

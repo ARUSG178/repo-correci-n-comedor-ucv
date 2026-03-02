@@ -10,8 +10,6 @@ import com.comedor.modelo.entidades.Administrador;
 import com.comedor.modelo.entidades.Profesor;
 import com.comedor.modelo.validaciones.VRegistro;
 import com.comedor.modelo.persistencia.RepoAdminCdg;
-
-import java.io.IOException;
 import java.util.List;
 
 public class ServicioRegistro {
@@ -23,7 +21,7 @@ public class ServicioRegistro {
     }
 
     // Valida la identidad con Secretaría y guarda la cuenta en la base de datos local
-    public void registrarUsuario(Usuario nuevoUsuario) throws InvalidCredentialsException, DuplicateUserException, IOException {
+    public void registrarUsuario(Usuario nuevoUsuario) throws InvalidCredentialsException, DuplicateUserException, Exception {
         List<Usuario> usuariosRegistrados = repositorio.listarUsuarios();
 
         VRegistro validador = new VRegistro(nuevoUsuario, usuariosRegistrados);
@@ -39,7 +37,7 @@ public class ServicioRegistro {
     }
 
     // Método inteligente que detecta el tipo de usuario automáticamente
-    public void registrarUsuario(String cedula, String contr, String codigo) throws InvalidCredentialsException, DuplicateUserException, IOException {
+    public void registrarUsuario(String cedula, String contr, String codigo) throws InvalidCredentialsException, DuplicateUserException, Exception {
         Usuario nuevoUsuario;
 
         // CASO 1: Registro como Administrador (si se provee código)

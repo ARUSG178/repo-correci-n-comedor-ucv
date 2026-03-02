@@ -69,3 +69,9 @@
 [2026-03-01 23:46:17] INFO: Turno seleccionado: 07:00 - 08:00 para usuario 29617475
 [2026-03-02 11:27:23] INFO: Inicio de sesión exitoso para cédula: 29617475
 [2026-03-02 12:41:58] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 14:29:54] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 18:09:24] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 18:54:44] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 19:00:56] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 19:04:46] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 19:34:51] INFO: Inicio de sesión exitoso para cédula: 29617475

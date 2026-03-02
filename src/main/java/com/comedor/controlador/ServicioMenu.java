@@ -10,9 +10,11 @@ import com.comedor.modelo.entidades.Menu;
 import com.comedor.modelo.entidades.Platillo;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.entidades.Estudiante;
+import com.comedor.modelo.entidades.EstudianteBecario;
+import com.comedor.modelo.entidades.EstudianteExonerado;
 import com.comedor.modelo.entidades.Empleado;
-import com.comedor.modelo.entidades.Administrador;
 import com.comedor.modelo.entidades.Profesor;
+import com.comedor.modelo.entidades.Administrador;
 import com.comedor.utilidades.Logger;
 
 public class ServicioMenu {
@@ -39,6 +41,12 @@ public class ServicioMenu {
             // Sin config
         }
 
+        if (usuario instanceof EstudianteExonerado) {
+            return 0.0;
+        }
+        if (usuario instanceof EstudianteBecario) {
+            return 0.05;
+        }
         if (usuario instanceof Estudiante) {
             return parseFactor(props.getProperty("tarifa_pct_estudiante"), 0.20);
         }
