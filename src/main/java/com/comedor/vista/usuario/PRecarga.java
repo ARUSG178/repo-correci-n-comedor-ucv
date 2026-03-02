@@ -1,16 +1,16 @@
 package com.comedor.vista.usuario;
 
+import com.comedor.controlador.ServicioCosto;
 import com.comedor.modelo.entidades.Monedero;
 import com.comedor.modelo.entidades.Usuario;
-import com.comedor.modelo.persistencia.RepoUsuarios;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Componente gráfico reutilizable para gestionar la recarga de saldo del usuario.
@@ -20,20 +20,25 @@ public class PRecarga extends JPanel {
     private final Usuario usuario;
     private final Monedero monedero;
     private final Runnable alRecargar; // Acción a ejecutar tras una recarga exitosa
+    private final ServicioCosto servicioCosto;
     
     private JLabel lblSaldoActual;
+    private JComboBox<String> cmbBanco;
+    private JTextField txtReferencia;
     private JTextField txtMontoRecarga;
     private JButton btnRecargar;
 
-    // Colores del tema
-    private static final Color COLOR_AZUL_INST = new Color(0, 51, 102);
-    private static final Color COLOR_FONDO = new Color(245, 245, 250);
+    private Color uiColor(String key, Color fallback) {
+        Color c = UIManager.getColor(key);
+        return (c != null) ? c : fallback;
+    }
 
     // Constructor principal
     public PRecarga(Usuario usuario, Runnable alRecargar) {
         this.usuario = usuario;
         this.monedero = new Monedero(usuario);
         this.alRecargar = alRecargar;
+        this.servicioCosto = new ServicioCosto();
         
         initUI();
         actualizarSaldoVisual();
@@ -42,31 +47,40 @@ public class PRecarga extends JPanel {
     // Inicializa los componentes del panel de recarga
     private void initUI() {
         setLayout(new BorderLayout(15, 15));
-        setBackground(COLOR_FONDO);
-        // Borde redondeado simulado con borde compuesto
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                new EmptyBorder(20, 20, 20, 20)
-        ));
+        setOpaque(false); // Para permitir el fondo redondeado personalizado
+        setBackground(Color.WHITE); // Color base para el fondo redondeado
+        setBorder(new EmptyBorder(20, 25, 25, 25));
 
         // --- SECCIÓN SUPERIOR: Título y Saldo ---
-        JPanel panelInfo = new JPanel(new GridLayout(2, 1, 5, 5));
+        JPanel panelInfo = new JPanel(new BorderLayout(0, 5));
         panelInfo.setOpaque(false);
 
         JLabel lblTitulo = new JLabel("Mi Monedero");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTitulo.setForeground(COLOR_AZUL_INST);
+        lblTitulo.setForeground(uiColor("Comedor.azulInst", new Color(0, 51, 102)));
+        lblTitulo.setBorder(new EmptyBorder(0, 0, 10, 0));
 
-        lblSaldoActual = new JLabel("Saldo: $ 0.00");
-        lblSaldoActual.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        lblSaldoActual.setForeground(new Color(50, 50, 50));
+        JPanel saldoContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        saldoContainer.setOpaque(false);
+        JLabel saldoTexto = new JLabel("Saldo disponible: ");
+        saldoTexto.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        saldoTexto.setForeground(uiColor("Comedor.textoSecundario", new Color(100, 100, 100)));
 
-        panelInfo.add(lblTitulo);
-        panelInfo.add(lblSaldoActual);
+        lblSaldoActual = new JLabel("$ 0.00");
+        lblSaldoActual.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblSaldoActual.setForeground(uiColor("Comedor.verdeExito", new Color(0, 100, 0)));
+
+        saldoContainer.add(saldoTexto);
+        saldoContainer.add(lblSaldoActual);
+
+        panelInfo.add(lblTitulo, BorderLayout.NORTH);
+        panelInfo.add(saldoContainer, BorderLayout.CENTER);
 
         // --- SECCIÓN CENTRAL: Input y Botón ---
-        JPanel panelAccion = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        JPanel panelAccion = new JPanel(new GridBagLayout());
         panelAccion.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 5, 8, 5);
 
         txtMontoRecarga = new JTextField(10);
         txtMontoRecarga.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -86,37 +100,99 @@ public class PRecarga extends JPanel {
             }
         });
 
+        txtReferencia = new JTextField(12);
+        txtReferencia.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtReferencia.setToolTipText("Número de referencia");
+
         btnRecargar = new JButton("Recargar");
         btnRecargar.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnRecargar.setBackground(COLOR_AZUL_INST);
+        btnRecargar.setBackground(uiColor("Comedor.azulInst", new Color(0, 51, 102)));
         btnRecargar.setForeground(Color.WHITE);
+        btnRecargar.setOpaque(true);
+        btnRecargar.setContentAreaFilled(true);
         btnRecargar.setFocusPainted(false);
         btnRecargar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnRecargar.setBorder(new EmptyBorder(10, 20, 10, 20));
         btnRecargar.addActionListener(e -> procesarRecarga());
 
-        // Espaciado entre input y botón
-        panelAccion.add(new JLabel("Monto: "));
-        panelAccion.add(Box.createHorizontalStrut(10));
-        panelAccion.add(txtMontoRecarga);
-        panelAccion.add(Box.createHorizontalStrut(15));
-        panelAccion.add(btnRecargar);
+        // Efecto Hover para el botón leyendo del "CSS"
+        btnRecargar.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btnRecargar.setBackground(uiColor("Comedor.azulHover", new Color(0, 81, 132)));
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btnRecargar.setBackground(uiColor("Comedor.azulInst", new Color(0, 51, 102)));
+            }
+        });
+
+        // --- Construcción del Formulario ---
+        
+        // Fila 1: Banco
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
+        panelAccion.add(crearLabelConIcono("🏦", "Banco:"), gbc);
+        
+        String[] bancos = {"Mercantil", "Banesco", "Venezuela", "Bancamiga", "Provincial", "BNC"};
+        cmbBanco = new JComboBox<>(bancos);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        panelAccion.add(cmbBanco, gbc);
+
+        // Fila 2: Referencia
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
+        panelAccion.add(crearLabelConIcono("🧾", "Referencia:"), gbc);
+        
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        panelAccion.add(txtReferencia, gbc);
+
+        // Fila 3: Monto
+        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
+        panelAccion.add(crearLabelConIcono("💵", "Monto ($):"), gbc);
+        
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        panelAccion.add(txtMontoRecarga, gbc);
+
+        // Fila 4: Botón
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(20, 5, 5, 5);
+        panelAccion.add(btnRecargar, gbc);
 
         add(panelInfo, BorderLayout.NORTH);
         add(panelAccion, BorderLayout.CENTER);
         
         // Tamaño preferido para que se vea bien en el centro
-        setPreferredSize(new Dimension(400, 150));
-        setMaximumSize(new Dimension(500, 160));
+        setPreferredSize(new Dimension(420, 340));
+        setMaximumSize(new Dimension(450, 360));
+    }
+
+    // Dibuja el fondo redondeado del panel
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setColor(getBackground());
+        g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+        g2d.dispose();
+    }
+
+    // Helper para crear etiquetas con un icono (emoji) y estilo global
+    private JLabel crearLabelConIcono(String icono, String texto) {
+        JLabel label = new JLabel(icono + " " + texto);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        label.setForeground(uiColor("Comedor.textoSecundario", new Color(100, 100, 100)));
+        return label;
     }
 
     // Actualiza la etiqueta de saldo con el valor actual del monedero
     private void actualizarSaldoVisual() {
-        lblSaldoActual.setText(String.format("Saldo disponible: $ %.2f", monedero.obtSaldo()));
+        lblSaldoActual.setText(String.format("$ %.2f", monedero.obtSaldo()));
     }
 
     // Valida el monto ingresado y ejecuta la recarga y persistencia
     private void procesarRecarga() {
         String textoMonto = txtMontoRecarga.getText().trim();
+        String banco = (String) cmbBanco.getSelectedItem();
+        String referencia = txtReferencia.getText().trim();
         
         if (textoMonto.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Por favor ingrese un monto.", "Error", JOptionPane.WARNING_MESSAGE);
@@ -140,30 +216,14 @@ public class PRecarga extends JPanel {
                 return;
             }
 
-            // 1. Recargar
-            monedero.recargar(monto);
+            // 1. Delegar la recarga al servicio (Valida banco, referencia y persiste)
+            servicioCosto.procesarRecarga(usuario, monto, banco, referencia);
             
-            // 2. Persistir el nuevo saldo en la base de datos (archivo)
-            try {
-                RepoUsuarios repo = new RepoUsuarios();
-                List<Usuario> usuarios = repo.listarUsuarios();
-                for (Usuario u : usuarios) {
-                    if (u.obtCedula().equals(usuario.obtCedula())) {
-                        u.setSaldo(monedero.obtSaldo()); // Actualizamos el saldo explícitamente
-                        break;
-                    }
-                }
-                repo.guardarTodos(usuarios);
-                
-                // Sincronizar el objeto usuario local por si acaso
-                usuario.setSaldo(monedero.obtSaldo());
-            } catch (IOException ioEx) {
-                JOptionPane.showMessageDialog(this, "Error al guardar el saldo: " + ioEx.getMessage(), "Error de Persistencia", JOptionPane.ERROR_MESSAGE);
-            }
-
-            // 3. Actualizar UI interna
+            // 2. Actualizar UI interna
             actualizarSaldoVisual();
             txtMontoRecarga.setText("");
+            txtReferencia.setText("");
+            cmbBanco.setSelectedIndex(0);
             
             // 4. Notificar a la ventana padre para que actualice otros componentes
             if (alRecargar != null) {
@@ -177,6 +237,8 @@ public class PRecarga extends JPanel {
 
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Monto inválido. Use formato numérico (ej: 50.00)", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error en Recarga", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

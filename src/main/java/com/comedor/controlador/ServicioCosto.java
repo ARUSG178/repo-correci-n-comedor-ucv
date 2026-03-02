@@ -1,13 +1,17 @@
 package com.comedor.controlador;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.entidades.RegistroCosto;
+import com.comedor.modelo.persistencia.RepoUsuarios;
 import com.comedor.util.ServicioUtil;
+import com.comedor.utilidades.Logger;
 
 public class ServicioCosto {
     private List<RegistroCosto> costos = new ArrayList<>();
@@ -18,19 +22,19 @@ public class ServicioCosto {
     // Registra la cantidad estimada de bandejas a producir en un periodo específico
     public void registrarProduccionBandejas(String periodo, int cantidad) {
         produccionBandejas.put(periodo, cantidad);
-        System.out.println("Producción estimada de bandejas para " + periodo + ": " + cantidad);
+        Logger.info("Producción estimada de bandejas para " + periodo + ": " + cantidad);
     }
 
     // Registra el porcentaje de merma (0.0 a 1.0) esperado para el periodo
     public void registrarMerma(String periodo, double porcentaje) {
         mermas.put(periodo, porcentaje);
-        System.out.println("Merma registrada para " + periodo + ": " + (porcentaje * 100) + "%");
+        Logger.info("Merma registrada para " + periodo + ": " + (porcentaje * 100) + "%");
     }
 
     // Agrega un nuevo registro de costo al sistema con su tipo y descripción
     public void agregarCosto(String periodo, RegistroCosto.TipoCosto tipo, String descripcion, double monto) {
         costos.add(new RegistroCosto(periodo, tipo, descripcion, monto));
-        System.out.println("Costo agregado: " + descripcion + " (" + tipo + ")");
+        Logger.info("Costo agregado: " + descripcion + " (" + tipo + ")");
     }
 
     // Obtiene una lista de costos filtrados por el periodo especificado
@@ -73,7 +77,7 @@ public class ServicioCosto {
         double diferencia = precioNuevo - precioAnterior;
         String descripcion = String.format("Cambio precio %s por %s: %.2f -> %.2f (diff %.2f)", nombrePlatillo, actor, precioAnterior, precioNuevo, diferencia);
         agregarCosto(periodo, RegistroCosto.TipoCosto.VARIABLE, descripcion, precioNuevo);
-        System.out.println("Registro de cambio de precio creado: " + descripcion);
+        Logger.info("Registro de cambio de precio creado: " + descripcion);
     }
 
     // --- MÉTODOS AGREGADOS PARA CUMPLIR CON REQUERIMIENTOS DE SERVICIOMENU ---
@@ -100,5 +104,38 @@ public class ServicioCosto {
 
     public String obtenerPeriodoActual() {
         return ServicioUtil.obtenerPeriodoActual();
+    }
+
+    // Procesa la recarga de saldo validando los datos y persistiendo el cambio
+    public void procesarRecarga(Usuario usuario, double monto, String banco, String referencia) throws Exception {
+        if (monto <= 0) {
+            throw new IllegalArgumentException("El monto a recargar debe ser mayor a 0.");
+        }
+        if (banco == null || banco.trim().isEmpty()) {
+            throw new IllegalArgumentException("Debe seleccionar un banco de procedencia.");
+        }
+        if (referencia == null || referencia.trim().isEmpty()) {
+            throw new IllegalArgumentException("Debe ingresar el número de referencia de la transacción.");
+        }
+
+        RepoUsuarios repo = new RepoUsuarios();
+        List<Usuario> usuarios = repo.listarUsuarios();
+        boolean encontrado = false;
+
+        for (Usuario u : usuarios) {
+            if (u.obtCedula().equals(usuario.obtCedula())) {
+                double nuevoSaldo = u.obtSaldo() + monto;
+                u.setSaldo(nuevoSaldo);
+                usuario.setSaldo(nuevoSaldo); // Actualizar el objeto en memoria de la sesión actual
+                encontrado = true;
+                break;
+            }
+        }
+
+        if (encontrado) {
+            repo.guardarTodos(usuarios);
+        } else {
+            throw new IOException("No se encontró el usuario en la base de datos para actualizar el saldo.");
+        }
     }
 }

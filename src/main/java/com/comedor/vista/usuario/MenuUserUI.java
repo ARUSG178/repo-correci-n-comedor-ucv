@@ -3,8 +3,9 @@ package com.comedor.vista.usuario;
 import com.comedor.modelo.entidades.Estudiante;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.entidades.Empleado;
-import com.comedor.modelo.entidades.Administrador;
-import java.awt.BasicStroke;
+import com.comedor.vista.components.SideBarNavigation;
+import com.comedor.vista.utils.UIConstants;
+import com.comedor.utilidades.Logger;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -12,17 +13,15 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.RenderingHints;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +30,6 @@ import java.net.URL;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -41,20 +39,26 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
 
-import com.comedor.vista.admin.PrincipalAdminUI;
-
-
-  // Interfaz gráfica para el Menú del Comedor del sistema SAGC UCV.
 public class MenuUserUI extends JFrame {
 
     // --- PALETA DE COLORES (Basada en el diseño institucional) ---
-    private static final Color COLOR_AZUL_INST = new Color(0, 51, 102);            // Barras y Títulos
     private static final Color COLOR_OVERLAY = new Color(0, 51, 102, 140);      // Filtro sobre imagen
 
-    private final Usuario usuario;
+    private Usuario usuario;
     private BufferedImage backgroundImage;
+    private SideBarNavigation sideBarNavigation;
+    private JLabel lblPrecioDesayuno;
+    private JLabel lblPrecioAlmuerzo;
+    private JLabel lblDescDesayuno;
+    private JLabel lblDescAlmuerzo;
+    private JLabel lblNutriDesayuno;
+    private JLabel lblNutriAlmuerzo;
+    private JLabel lblImagenDesayuno;
+    private JLabel lblImagenAlmuerzo;
+
+    private static final Color CARD_BG = new Color(0, 0, 0, 140);
+    private static final Color CARD_TEXT = Color.WHITE;
     
     // Datos del platillo
     private String nombreDesayuno, precioDesayuno, rutaImagenDesayuno;
@@ -66,9 +70,89 @@ public class MenuUserUI extends JFrame {
     private double precioCalculadoDesayuno = 0.0;
     private double precioCalculadoAlmuerzo = 0.0;
 
+    private double factorPagoEstudiante = 0.20;
+    private double factorPagoEmpleado = 1.00;
+    private double factorPagoProfesor = 1.00;
+
     // Constructor por defecto para pruebas
     public MenuUserUI() {
         this(new Estudiante("00000000", "1234", "General", "UCV"));
+    }
+
+    private static class PrecioBreakdown {
+        private final double original;
+        private final double base;
+        private final double factor;
+        private final double finalCobro;
+
+        private PrecioBreakdown(double original, double base, double factor, double finalCobro) {
+            this.original = original;
+            this.base = base;
+            this.factor = factor;
+            this.finalCobro = finalCobro;
+        }
+    }
+
+    private PrecioBreakdown calcularBreakdown(String precioConfigurado) {
+        double original = 5.00;
+        try {
+            String pLimpio = precioConfigurado.replace("$", "").replace(" ", "").replace(",", ".").trim();
+            original = Double.parseDouble(pLimpio);
+        } catch (Exception e) {
+            // fallback
+        }
+
+        double base = (ccbActual > 0) ? ccbActual : original;
+
+        double factor;
+        if (usuario instanceof Estudiante) {
+            factor = factorPagoEstudiante;
+        } else if (usuario instanceof Empleado) {
+            factor = factorPagoEmpleado;
+        } else if (usuario instanceof com.comedor.modelo.entidades.Profesor) {
+            factor = factorPagoProfesor;
+        } else {
+            factor = 1.00;
+        }
+
+        double finalCobro = base * factor;
+        return new PrecioBreakdown(original, base, factor, finalCobro);
+    }
+
+    private String toHtmlPrecioBreakdown(PrecioBreakdown b) {
+        double subsidio = Math.max(0.0, b.base - b.finalCobro);
+        String tipo = (usuario instanceof Estudiante) ? "estudiante" : (usuario instanceof Empleado) ? "empleado" : (usuario instanceof com.comedor.modelo.entidades.Profesor) ? "profesor" : "usuario";
+        String pct = String.format("%.0f", b.factor * 100.0);
+
+        return "<html>"
+                + "<div style='text-align:center; width: 390px;'>"
+                + "<div style='font-size:10px; color:#cfcfcf;'>Precio original: $ " + String.format("%.2f", b.original) + "</div>"
+                + "<div style='font-size:10px; color:#cfcfcf;'>Base (CCB): $ " + String.format("%.2f", b.base) + "</div>"
+                + "<div style='font-size:10px; color:#cfcfcf;'>Tarifa aplicada (" + tipo + "): " + pct + "%</div>"
+                + "<div style='font-size:10px; color:#cfcfcf;'>Subsidio: $ " + String.format("%.2f", subsidio) + "</div>"
+                + "<div style='margin-top:6px; font-size:18px; color:#ffffff;'><b>Final: $ " + String.format("%.2f", b.finalCobro) + "</b></div>"
+                + "</div>"
+                + "</html>";
+    }
+
+    private static class RoundedTranslucentPanel extends JPanel {
+        private final int arc;
+        private final Color fill;
+
+        private RoundedTranslucentPanel(int arc, Color fill) {
+            this.arc = arc;
+            this.fill = fill;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(fill);
+            g2d.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+        }
     }
 
     // Constructor principal que recibe el usuario autenticado
@@ -84,6 +168,78 @@ public class MenuUserUI extends JFrame {
         
         configurarVentana();
         initUI();
+
+        addWindowFocusListener(new WindowAdapter() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                // Reflejar cambios del administrador (precios/imagen/desc/nutrición/CCB/tarifas)
+                SwingUtilities.invokeLater(() -> refrescarDesdeConfig());
+            }
+        });
+    }
+
+    private void refrescarDesdeConfig() {
+        cargarDatosPlatillo();
+
+        if (lblPrecioDesayuno != null) {
+            PrecioBreakdown b = calcularBreakdown(precioDesayuno);
+            lblPrecioDesayuno.setText(toHtmlPrecioBreakdown(b));
+        }
+        if (lblPrecioAlmuerzo != null) {
+            PrecioBreakdown b = calcularBreakdown(precioAlmuerzo);
+            lblPrecioAlmuerzo.setText(toHtmlPrecioBreakdown(b));
+        }
+
+        if (lblDescDesayuno != null) lblDescDesayuno.setText(toHtmlBlock(descDesayuno));
+        if (lblDescAlmuerzo != null) lblDescAlmuerzo.setText(toHtmlBlock(descAlmuerzo));
+
+        if (lblNutriDesayuno != null) lblNutriDesayuno.setText(toHtmlNutri(infoNutricionalDesayuno));
+        if (lblNutriAlmuerzo != null) lblNutriAlmuerzo.setText(toHtmlNutri(infoNutricionalAlmuerzo));
+
+        if (lblImagenDesayuno != null) setImagenEnLabel(lblImagenDesayuno, rutaImagenDesayuno);
+        if (lblImagenAlmuerzo != null) setImagenEnLabel(lblImagenAlmuerzo, rutaImagenAlmuerzo);
+    }
+
+    private String toHtmlBlock(String texto) {
+        String t = (texto != null && !texto.trim().isEmpty()) ? texto : "Descripción no disponible.";
+        return "<html><div style='text-align: center; width: 390px;'>" + t + "</div></html>";
+    }
+
+    private String toHtmlNutri(String texto) {
+        String t = (texto != null && !texto.trim().isEmpty()) ? texto : "Información nutricional pendiente.";
+        return "<html><div style='text-align: center; width: 390px;'><br><b>Información Nutricional:</b><br>" + t + "</div></html>";
+    }
+
+    private void setImagenEnLabel(JLabel label, String rutaImagen) {
+        try {
+            Image img = null;
+            if (rutaImagen != null && !rutaImagen.isEmpty()) {
+                File f = new File(rutaImagen);
+                if (f.exists()) {
+                    img = ImageIO.read(f);
+                } else {
+                    URL url = getClass().getResource(rutaImagen);
+                    if (url != null) img = ImageIO.read(url);
+                }
+            }
+            if (img != null) {
+                int w = label.getWidth();
+                int h = label.getHeight();
+                if (w <= 0 || h <= 0) {
+                    w = 360;
+                    h = 360;
+                }
+                Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                label.setIcon(new ImageIcon(scaled));
+                label.setText("");
+            } else {
+                label.setIcon(null);
+                label.setText("Sin imagen");
+            }
+        } catch (Exception e) {
+            label.setIcon(null);
+            label.setText("Sin imagen");
+        }
     }
     
     private void cargarDatosPlatillo() {
@@ -105,17 +261,33 @@ public class MenuUserUI extends JFrame {
             // Cargar CCB si existe
             String ccbStr = props.getProperty("ccb_actual", "0.0");
             ccbActual = Double.parseDouble(ccbStr);
+
+            factorPagoEstudiante = parseFactor(props.getProperty("tarifa_pct_estudiante"), 0.20);
+            factorPagoEmpleado = parseFactor(props.getProperty("tarifa_pct_empleado"), 1.00);
+            factorPagoProfesor = parseFactor(props.getProperty("tarifa_pct_profesor"), 1.00);
             
             // Calcular precios para ambos
             precioCalculadoDesayuno = calcularPrecioParaUsuario(precioDesayuno);
             precioCalculadoAlmuerzo = calcularPrecioParaUsuario(precioAlmuerzo);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            Logger.error("Error al cargar datos del platillo", e);
+        }
+    }
+
+    private double parseFactor(String pct, double fallback) {
+        if (pct == null || pct.trim().isEmpty()) {
+            return fallback;
+        }
+        try {
+            return Double.parseDouble(pct.trim()) / 100.0;
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 
     private double calcularPrecioParaUsuario(String precioConfigurado) {
-        // Lógica de negocio basada en el enunciado:
         // Estudiantes: 20% del CCB
-        // Empleados: 50% del CCB (ejemplo, enunciado dice 90-110%, ajustamos a lógica simple o lo que definas)
+        // Empleados: 50% del CCB 
         // Profesores/Admin: 100% CCB
         
         double base = 5.00; // Valor por defecto
@@ -133,15 +305,18 @@ public class MenuUserUI extends JFrame {
             base = ccbActual;
         }
         
-        double precioFinal;
+        double factor;
         if (usuario instanceof Estudiante) {
-            precioFinal = base * 0.20; // 20%
+            factor = factorPagoEstudiante;
         } else if (usuario instanceof Empleado) {
-            precioFinal = base * 0.50; // 50%
+            factor = factorPagoEmpleado;
+        } else if (usuario instanceof com.comedor.modelo.entidades.Profesor) {
+            factor = factorPagoProfesor;
         } else {
-            precioFinal = base; // 100%
+            factor = 1.00;
         }
-        return precioFinal;
+
+        return base * factor;
     }
 
     // Configura las propiedades de la ventana del menú
@@ -153,157 +328,6 @@ public class MenuUserUI extends JFrame {
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH); // Inicia en pantalla completa
     }
-
-    // Crea un panel individual para mostrar un platillo del menú
-    private JPanel crearPlatilloPanel(String titulo, String rutaImagen, String nombre, double precioCalculado, String descripcion, String infoNutricional) {
-        JPanel platilloPanel = new JPanel();
-        // Cambiamos a BoxLayout vertical para apilar elementos (Título, Imagen, Info, Botón)
-        platilloPanel.setLayout(new BoxLayout(platilloPanel, BoxLayout.Y_AXIS));
-        platilloPanel.setOpaque(false);
-        
-        // Título del platillo (Desayuno/Almuerzo)
-        JLabel lblTituloPlatillo = new JLabel(titulo, SwingConstants.CENTER);
-        lblTituloPlatillo.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        lblTituloPlatillo.setForeground(Color.WHITE);
-        lblTituloPlatillo.setBorder(new EmptyBorder(0, 0, 10, 0));
-        lblTituloPlatillo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Panel para la imagen (250x300)
-        JPanel imagenPanel = new JPanel(new GridBagLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(Color.WHITE);
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                
-                g2d.setColor(new Color(0, 51, 102, 180));
-                g2d.setStroke(new BasicStroke(2));
-                g2d.drawRoundRect(1, 1, getWidth()-2, getHeight()-2, 10, 10);
-                
-                g2d.setColor(new Color(100, 100, 100, 200));
-                g2d.setFont(new Font("Segoe UI", Font.BOLD, 20));
-                FontMetrics fm = g2d.getFontMetrics();
-                String numero = nombre;
-                int x = (getWidth() - fm.stringWidth(numero)) / 2;
-                int y = 30;
-                g2d.drawString(numero, x, y);
-                
-                g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 70));
-                String icono = "🍽️";
-                fm = g2d.getFontMetrics();
-                x = (getWidth() - fm.stringWidth(icono)) / 2;
-                y = (getHeight() + fm.getAscent()) / 2 - 10;
-                g2d.drawString(icono, x, y);
-                
-                g2d.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-                g2d.setColor(new Color(120, 120, 120, 180));
-                String texto = String.format("$ %.2f", precioCalculado);
-                fm = g2d.getFontMetrics();
-                x = (getWidth() - fm.stringWidth(texto)) / 2;
-                y = getHeight() - 20;
-                g2d.drawString(texto, x, y);
-            }
-        };
-        
-        // Tamaño aumentado para mejor visualización (380x480)
-        imagenPanel.setPreferredSize(new Dimension(380, 480));
-        imagenPanel.setMinimumSize(new Dimension(380, 480));
-        imagenPanel.setMaximumSize(new Dimension(380, 480));
-        imagenPanel.setBackground(new Color(245, 245, 245));
-        imagenPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Aquí iría la carga de la imagen real cuando esté implementada
-        try {
-            Image img = null;
-            if (rutaImagen != null && !rutaImagen.isEmpty()) {
-                // Prioridad a archivo local (cargado por admin)
-                File f = new File(rutaImagen);
-                if (f.exists()) {
-                    img = ImageIO.read(f);
-                } else {
-                    // Fallback a recursos
-                    URL url = getClass().getResource(rutaImagen);
-                    if (url != null) img = ImageIO.read(url);
-                }
-            }
-            if (img != null) {
-                Image scaled = img.getScaledInstance(376, 476, Image.SCALE_SMOOTH);
-                JLabel imagenLabel = new JLabel(new ImageIcon(scaled));
-                imagenLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                imagenPanel.add(imagenLabel);
-            }
-        } catch (Exception e) {
-        }
-
-        // --- NUEVA SECCIÓN: Descripción e Información Nutricional ---
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.setOpaque(false);
-        infoPanel.setBorder(new EmptyBorder(10, 5, 10, 5));
-        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel lblDesc = new JLabel("<html><div style='text-align: center; width: 260px;'>" + descripcion + "</div></html>");
-        lblDesc.setFont(new Font("Segoe UI", Font.ITALIC, 14));
-        lblDesc.setForeground(Color.WHITE);
-        lblDesc.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel lblNutri = new JLabel("<html><div style='text-align: center; width: 260px; color: #dddddd;'><br><b>Información Nutricional:</b><br>" + infoNutricional + "</div></html>");
-        lblNutri.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblNutri.setForeground(new Color(220, 220, 220));
-        lblNutri.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        infoPanel.add(lblDesc);
-        infoPanel.add(lblNutri);
-        
-        // Botón para seleccionar
-        JButton btnSeleccionar = new JButton("SELECCIONAR");
-        btnSeleccionar.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        
-        Color colorBase = new Color(0, 60, 120);
-        Color colorHover = new Color(0, 90, 180); // Azul más claro para el hover
-        
-        btnSeleccionar.setBackground(colorBase);
-        btnSeleccionar.setForeground(Color.WHITE);
-        btnSeleccionar.setFocusPainted(false);
-        btnSeleccionar.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
-        btnSeleccionar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        btnSeleccionar.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                btnSeleccionar.setBackground(colorHover);
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btnSeleccionar.setBackground(colorBase);
-            }
-        });
-
-        // Acción: Ir a Reconocimiento Facial
-        btnSeleccionar.addActionListener(e -> {
-            // Redirigir a selección de turno
-            new SeleccionarTurnoUI(usuario, precioCalculado, titulo).setVisible(true);
-            MenuUserUI.this.dispose();
-        });
-        
-        // Panel envolvente para forzar el centrado del botón
-        JPanel botonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        botonPanel.setOpaque(false);
-        botonPanel.add(btnSeleccionar);
-        botonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        platilloPanel.add(lblTituloPlatillo);
-        platilloPanel.add(imagenPanel);
-        platilloPanel.add(infoPanel);
-        platilloPanel.add(Box.createVerticalStrut(5));
-        platilloPanel.add(botonPanel);
-        
-        return platilloPanel;
-    }
-
 
     // Inicializa y construye la interfaz gráfica del menú
     private void initUI() {
@@ -318,91 +342,45 @@ public class MenuUserUI extends JFrame {
                 }
                 g2d.setColor(COLOR_OVERLAY);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
-                g2d.setColor(COLOR_AZUL_INST);
-                int barHeight = 135;
-                g2d.fillRect(0, 0, getWidth(), barHeight);
-                g2d.fillRect(0, getHeight() - barHeight, getWidth(), barHeight);
+
+                // --- BARRAS AZULES SÓLIDAS ---
+                int topBarHeight = 60;
+                int bottomBarHeight = 30;
+                g2d.setColor(new Color(0, 51, 102)); // Azul institucional
+                g2d.fillRect(0, 0, getWidth(), topBarHeight);
+                g2d.fillRect(0, getHeight() - bottomBarHeight, getWidth(), bottomBarHeight);
             }
         };
         backgroundPanel.setLayout(new BorderLayout());
         setContentPane(backgroundPanel);
 
-        // --- LOGO ESTILIZADO (< SAGC)
-        JLabel brandLabel = new JLabel("< SAGC") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                g2.setFont(getFont());
-                g2.setColor(new Color(0, 0, 0, 80));
-                g2.drawString(getText(), 3, 43);
-                g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, getHeight(), new Color(220, 220, 220)));
-                g2.drawString(getText(), 0, 40);
-                g2.dispose();
-            }
-        };
-        brandLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 52));
-        brandLabel.setForeground(Color.WHITE);
-        brandLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        brandLabel.addMouseListener(new MouseAdapter() {
-            @Override 
-            public void mouseClicked(MouseEvent e) {
-                if (usuario instanceof Administrador) {
-                    new PrincipalAdminUI(usuario).setVisible(true);
-                } else {
-                    new PrincipalUserUI(usuario).setVisible(true);
-                }
+        // AÑADIR LA BARRA LATERAL MEJORADA
+        sideBarNavigation = new SideBarNavigation(usuario, () -> {
+            // Ir al panel principal real (evita tener dos "menús principales")
+            SwingUtilities.invokeLater(() -> {
+                new PrincipalUserUI(usuario).setVisible(true);
                 MenuUserUI.this.dispose();
-            }
+            });
         });
+        backgroundPanel.add(sideBarNavigation, BorderLayout.WEST);
 
-        brandLabel.addKeyListener(new KeyAdapter() {
-            @Override 
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_UP) {
-                    if (usuario instanceof Administrador) {
-                        new PrincipalAdminUI(usuario).setVisible(true);
-                    } else {
-                        new PrincipalUserUI(usuario).setVisible(true);
-                    }
-                    MenuUserUI.this.dispose();
-                }
-            }
-        });
+        // --- HEADER (misma estructura/altura que SeleccionarTurnoUI) ---
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setOpaque(false);
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
 
-        JPanel topBarContainer = new JPanel();
-        topBarContainer.setOpaque(false);
-        topBarContainer.setPreferredSize(new Dimension(getWidth(), 135));
-        topBarContainer.setLayout(new BoxLayout(topBarContainer, BoxLayout.X_AXIS));
-
-        topBarContainer.add(Box.createRigidArea(new Dimension(20, 0)));
-
-        JPanel verticalCenterPanel = new JPanel();
-        verticalCenterPanel.setOpaque(false);
-        verticalCenterPanel.setLayout(new BoxLayout(verticalCenterPanel, BoxLayout.Y_AXIS));
-
-        verticalCenterPanel.add(Box.createVerticalGlue());
-
-        verticalCenterPanel.add(brandLabel);
-
-        verticalCenterPanel.add(Box.createVerticalGlue());
-
-        topBarContainer.add(verticalCenterPanel);
-
-        topBarContainer.add(Box.createHorizontalGlue());
-        
-        // Título principal movido a la franja azul
         JLabel menuTitle = new JLabel("Seleccione su platillo", SwingConstants.CENTER);
-        menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        menuTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         menuTitle.setForeground(Color.WHITE);
-        topBarContainer.add(menuTitle);
-        
-        topBarContainer.add(Box.createHorizontalGlue());
+        headerPanel.add(menuTitle, BorderLayout.CENTER);
 
-        backgroundPanel.add(topBarContainer, BorderLayout.NORTH);
+        backgroundPanel.add(headerPanel, BorderLayout.NORTH);
 
-        // --- CONTENIDO CENTRAL CON LOS 4 PLATILLOS EN HORIZONTAL ---
+        // --- CONTENIDO DERECHO (Para evitar superposición) ---
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setOpaque(false);
+
+        // --- CONTENIDO CENTRAL CON LOS PLATILLOS ---
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setOpaque(false);
@@ -414,15 +392,19 @@ public class MenuUserUI extends JFrame {
         contentPanel.setOpaque(false);
         contentPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JPanel filaPlatillos = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 0));
+        JPanel filaPlatillos = new JPanel(new GridBagLayout());
         filaPlatillos.setOpaque(false);
-        filaPlatillos.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
+        GridBagConstraints gbc = new GridBagConstraints();
         JPanel panelDesayuno = crearPlatilloPanel("Desayuno", rutaImagenDesayuno, nombreDesayuno, precioCalculadoDesayuno, descDesayuno, infoNutricionalDesayuno);
         JPanel panelAlmuerzo = crearPlatilloPanel("Almuerzo", rutaImagenAlmuerzo, nombreAlmuerzo, precioCalculadoAlmuerzo, descAlmuerzo, infoNutricionalAlmuerzo);
-        
-        filaPlatillos.add(panelDesayuno);
-        filaPlatillos.add(panelAlmuerzo);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 0, 100); // gap de 100px a la derecha
+        filaPlatillos.add(panelDesayuno, gbc);
+
+        gbc.gridx = 1;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        filaPlatillos.add(panelAlmuerzo, gbc);
         
         contentPanel.add(filaPlatillos);
         
@@ -430,10 +412,130 @@ public class MenuUserUI extends JFrame {
         
         centerPanel.add(Box.createVerticalGlue());
         
-        backgroundPanel.add(centerPanel, BorderLayout.CENTER);
+        rightPanel.add(centerPanel, BorderLayout.CENTER);
+        
+        backgroundPanel.add(rightPanel, BorderLayout.CENTER);
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new MenuUserUI().setVisible(true));
+    // Crea un panel individual para mostrar un platillo del menú
+    private JPanel crearPlatilloPanel(String titulo, String rutaImagen, String nombre, double precioCalculado, String descripcion, String infoNutricional) {
+        JPanel platilloPanel = new JPanel(new BorderLayout());
+        platilloPanel.setOpaque(false);
+
+        final int contentWidth = UIConstants.CONTENT_WIDTH_NORMAL;
+
+        RoundedTranslucentPanel card = new RoundedTranslucentPanel(26, CARD_BG);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(UIConstants.CARD_PADDING);
+        card.setPreferredSize(new Dimension(UIConstants.CARD_MAX_WIDTH, 740));
+        card.setMaximumSize(new Dimension(UIConstants.CARD_MAX_WIDTH, 740));
+        card.setMinimumSize(new Dimension(UIConstants.CARD_MAX_WIDTH, 740));
+
+        PrecioBreakdown breakdown = calcularBreakdown("Desayuno".equalsIgnoreCase(titulo) ? precioDesayuno : precioAlmuerzo);
+
+        JLabel lblTituloPlatillo = new JLabel(titulo, SwingConstants.CENTER);
+        lblTituloPlatillo.setFont(UIConstants.FONT_CARD_TITLE);
+        lblTituloPlatillo.setForeground(new Color(160, 200, 255));
+        lblTituloPlatillo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblTituloPlatillo.setMaximumSize(new Dimension(contentWidth, 24));
+
+        JLabel lblNombre = new JLabel(nombre != null ? nombre : "", SwingConstants.CENTER);
+        lblNombre.setFont(UIConstants.FONT_CARD_SUBTITLE);
+        lblNombre.setForeground(CARD_TEXT);
+        lblNombre.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblNombre.setMaximumSize(new Dimension(contentWidth, 28));
+
+        // Panel para la imagen
+        JPanel imagenPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(0, 0, 0, 110));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            }
+        };
+        imagenPanel.setPreferredSize(new Dimension(390, 390));
+        imagenPanel.setBackground(new Color(0, 0, 0, 0));
+
+        JLabel imagenLabel = new JLabel();
+        imagenLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        imagenLabel.setVerticalAlignment(SwingConstants.CENTER);
+        imagenLabel.setMaximumSize(new Dimension(390, 390));
+        setImagenEnLabel(imagenLabel, rutaImagen);
+        imagenPanel.add(imagenLabel);
+
+        // Info
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setOpaque(false);
+        infoPanel.setBorder(UIConstants.spacingVertical(UIConstants.SPACING_SM));
+        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Wrapper para centrar descripción
+        JPanel wrapDesc = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        wrapDesc.setOpaque(false);
+        JLabel lblDesc = new JLabel(toHtmlBlock(descripcion));
+        lblDesc.setFont(UIConstants.FONT_BODY_NORMAL);
+        lblDesc.setForeground(CARD_TEXT);
+        wrapDesc.add(lblDesc);
+
+        // Wrapper para centrar nutrición
+        JPanel wrapNutri = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        wrapNutri.setOpaque(false);
+        JLabel lblNutri = new JLabel(toHtmlNutri(infoNutricional));
+        lblNutri.setFont(UIConstants.FONT_BODY_NORMAL);
+        lblNutri.setForeground(CARD_TEXT);
+        wrapNutri.add(lblNutri);
+
+        // Wrapper para centrar precio
+        JPanel wrapPrecio = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        wrapPrecio.setOpaque(false);
+        JLabel lblPrecio = new JLabel(toHtmlPrecioBreakdown(breakdown));
+        lblPrecio.setFont(UIConstants.FONT_CARD_SUBTITLE);
+        lblPrecio.setForeground(new Color(255, 215, 0));
+        wrapPrecio.add(lblPrecio);
+
+        // Wrapper para centrar botón
+        JPanel wrapBoton = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        wrapBoton.setOpaque(false);
+        JButton btnSeleccionar = new JButton("Seleccionar");
+        btnSeleccionar.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        btnSeleccionar.setFont(UIConstants.FONT_BUTTON);
+        btnSeleccionar.setBackground(new Color(0, 40, 90));
+        btnSeleccionar.setForeground(Color.WHITE);
+        btnSeleccionar.setFocusPainted(false);
+        btnSeleccionar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnSeleccionar.setOpaque(true);
+        btnSeleccionar.setContentAreaFilled(true);
+        btnSeleccionar.addActionListener(e -> {
+            if ("Desayuno".equalsIgnoreCase(titulo)) {
+                new SeleccionarTurnoUI(usuario, breakdown.finalCobro, "Desayuno").setVisible(true);
+            } else if ("Almuerzo".equalsIgnoreCase(titulo)) {
+                new SeleccionarTurnoUI(usuario, breakdown.finalCobro, "Almuerzo").setVisible(true);
+            }
+        });
+        wrapBoton.add(btnSeleccionar);
+
+        infoPanel.add(wrapDesc);
+        infoPanel.add(Box.createVerticalStrut(UIConstants.SPACING_SM));
+        infoPanel.add(wrapNutri);
+        infoPanel.add(Box.createVerticalStrut(UIConstants.SPACING_MD));
+        infoPanel.add(wrapPrecio);
+        infoPanel.add(Box.createVerticalStrut(UIConstants.SPACING_MD));
+        infoPanel.add(wrapBoton);
+
+        card.add(lblTituloPlatillo);
+        card.add(Box.createVerticalStrut(4));
+        card.add(lblNombre);
+        card.add(Box.createVerticalStrut(8));
+        card.add(imagenPanel);
+        card.add(infoPanel);
+
+        platilloPanel.add(card, BorderLayout.CENTER);
+        return platilloPanel;
     }
+
+    // ... (rest of the code remains the same)
 }

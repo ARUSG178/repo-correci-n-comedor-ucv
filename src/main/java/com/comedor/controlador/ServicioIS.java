@@ -4,6 +4,7 @@ import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.excepciones.*;
 import com.comedor.modelo.validaciones.VSesion;
 import com.comedor.modelo.persistencia.RepoUsuarios;
+import com.comedor.utilidades.Logger;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,7 +44,7 @@ public class ServicioIS {
 
     // Procesa un inicio de sesión exitoso, reseteando intentos y guardando
     private void pLoginExitoso(Usuario usuario, List<Usuario> todosLosUsuarios, RepoUsuarios repo) throws IOException {
-        System.out.println("LOG: Inicio de sesión exitoso para cédula: " + usuario.obtCedula());
+        Logger.info("Inicio de sesión exitoso para cédula: " + usuario.obtCedula());
         usuario.setIntentosFallidos(0);
         repo.guardarTodos(todosLosUsuarios);
     }

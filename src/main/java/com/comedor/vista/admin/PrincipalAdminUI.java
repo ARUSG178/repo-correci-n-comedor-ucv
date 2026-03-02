@@ -1,89 +1,79 @@
 package com.comedor.vista.admin;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.RenderingHints;
+import com.comedor.controlador.ServicioMenu;
+import com.comedor.modelo.entidades.Menu;
+import com.comedor.modelo.entidades.Platillo;
+import com.comedor.modelo.entidades.Usuario;
+import com.comedor.vista.DialogoCCB;
+import com.comedor.vista.InicioSesionUI;
+import com.comedor.vista.components.SideBarNavigation;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
-
-import com.comedor.modelo.entidades.Administrador;
-import com.comedor.modelo.entidades.Usuario;
-import com.comedor.vista.usuario.MenuUserUI;
-import com.comedor.vista.DialogoCCB;
-import com.comedor.vista.InicioSesionUI;
-
-/**
- * Interfaz gráfica para el registro de usuarios del sistema SAGC UCV.
- */
 public class PrincipalAdminUI extends JFrame {
 
-    // --- PALETA DE COLORES (Basada en el diseño institucional) ---
-    private static final Color COLOR_AZUL_INST = new Color(0, 51, 102);            // Barras y Títulos
-    private static final Color COLOR_OVERLAY = new Color(0, 51, 102, 140);      // Filtro sobre imagen
-
+    private final Usuario usuario;
+    private final ServicioMenu servicioMenu;
     private BufferedImage backgroundImage;
-    private Usuario usuario;
+    // --- Componentes Desayuno ---
+    private JTextField txtNombreDes;
+    private JTextField txtPrecioDes;
+    private JTextArea txtDescDes;
+    private JTextArea txtNutriDes;
+    private JLabel lblImgDes;
+    private String rutaImgDes = "";
 
-    /**
-     * Inicializa la interfaz de registro y carga recursos (imagen de fondo).
-     */
-    public PrincipalAdminUI() {
-        this(new Administrador("00000000", "admin", "00000000"));
-    }
+    // --- Componentes Almuerzo ---
+    private JTextField txtNombreAlm;
+    private JTextField txtPrecioAlm;
+    private JTextArea txtDescAlm;
+    private JTextArea txtNutriAlm;
+    private JLabel lblImgAlm;
+    private String rutaImgAlm = "";
+
+    // Colores ORIGINALES AZULES
+    private static final Color COLOR_AZUL_INST = new Color(0, 51, 102); // Azul institucional ORIGINAL
+    private static final Color COLOR_AZUL_HOVER = new Color(0, 81, 132); // Azul hover ORIGINAL
+    private static final Color COLOR_FONDO_PANEL = new Color(245, 245, 250); // Fondo claro para contenido
 
     public PrincipalAdminUI(Usuario usuario) {
         this.usuario = usuario;
+        this.servicioMenu = new ServicioMenu(); // Carga la config automáticamente
+
         try {
             URL imageUrl = getClass().getResource("/com/comedor/resources/images/registro_e_inicio_sesion/com_reg_bg.jpg");
-            if (imageUrl != null) backgroundImage = ImageIO.read(imageUrl);
+            if (imageUrl != null)
+                backgroundImage = ImageIO.read(imageUrl);
         } catch (IOException e) {
             System.err.println("Imagen de fondo no encontrada.");
         }
-        
+
         configurarVentana();
         initUI();
+        cargarDatosActuales();
     }
 
-    /**
-     * Configura propiedades básicas de la ventana de registro.
-     */
     private void configurarVentana() {
-        setTitle("Admin - SAGC UCV");
+        setTitle("Panel de Administración - SAGC UCV");
         setSize(1400, 950);
-        setMinimumSize(new Dimension(900, 800));
+        setMinimumSize(new Dimension(1100, 800));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Centra la ventana al abrirse
-        setExtendedState(JFrame.MAXIMIZED_BOTH); 
+        setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
-    /**
-     * Construye y organiza los componentes del formulario de registro.
-     */
     private void initUI() {
-        
-        // 1. PANEL DE FONDO: Dibuja la imagen, el filtro y las barras
         JPanel backgroundPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -92,295 +82,392 @@ public class PrincipalAdminUI extends JFrame {
                 if (backgroundImage != null) {
                     g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
                 }
-                g2d.setColor(COLOR_OVERLAY);
+                g2d.setColor(new Color(0, 51, 102, 140)); // Overlay
                 g2d.fillRect(0, 0, getWidth(), getHeight());
 
-                // Barras sólidas superior e inferior
+                // Barras azules consistentes
+                int topBarHeight = 60;
+                int bottomBarHeight = 30;
                 g2d.setColor(COLOR_AZUL_INST);
-                int barHeight = 160;
-                g2d.fillRect(0, 0, getWidth(), barHeight);
-                g2d.fillRect(0, getHeight() - barHeight, getWidth(), barHeight);
+                g2d.fillRect(0, 0, getWidth(), topBarHeight);
+                g2d.fillRect(0, getHeight() - bottomBarHeight, getWidth(), bottomBarHeight);
             }
         };
         backgroundPanel.setLayout(new BorderLayout());
         setContentPane(backgroundPanel);
 
-        // 2. CONTENEDOR DE CONTENIDO (GridBagLayout para el centrado)
-        JPanel contentHost = new JPanel(new GridBagLayout());
-        contentHost.setOpaque(false);
+        // --- HEADER ---
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setOpaque(false);
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
 
-        // --- LOGO ESTILIZADO (SAGC) Y PESTAÑAS DE NAVEGACIÓN ---
-        JLabel brandLabel = new JLabel("SAGC | Admin") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                // Sombra
-                g2.setFont(getFont());
-                g2.setColor(new Color(0, 0, 0, 80));
-                g2.drawString(getText(), 3, 43);
-                // Degradado metálico
-                g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, getHeight(), new Color(220, 220, 220)));
-                g2.drawString(getText(), 0, 40);
-                g2.dispose();
-            }
-        };
+        // Mensaje personalizado con nombre del admin
+        JLabel title = new JLabel("¡Bienvenido, " + usuario.obtNombre() + " - Gestión del Menú Semanal", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setForeground(Color.WHITE);
 
-        brandLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 52));
-        brandLabel.setForeground(Color.WHITE);
+        JButton btnLogout = new JButton("Cerrar Sesión");
+        btnLogout.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnLogout.setBackground(new Color(220, 53, 69));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.setFocusPainted(false);
+        btnLogout.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnLogout.addActionListener(e -> {
+            dispose();
+            new InicioSesionUI().setVisible(true);
+        });
+
+        // Panel para foto del admin
+        JPanel fotoPanel = new JPanel(new BorderLayout());
+        fotoPanel.setOpaque(false);
+        fotoPanel.setPreferredSize(new Dimension(50, 50));
         
-        // --- PESTAÑAS DE FUNCIONALIDADES ---
-        JPanel tabsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 30, 0));
-        tabsPanel.setOpaque(false);
-
-        JLabel usuarioTab = createTabLabel("Usuario");
-        JLabel menuTab = createTabLabel("AggPlatillo");
-        JLabel reservasTab = createTabLabel("AdministrarTurnos");
-        JLabel costosTab = createTabLabel("Costos CCB");
-        JLabel menuOrdenTab = createTabLabel("Menú");
-        JLabel cerrarSesionTab = createTabLabel("Cerrar Sesión");
-        
-        usuarioTab.addMouseListener(new MouseAdapter() {
-            @Override 
-            public void mouseClicked(MouseEvent e) {
-                new ListaUsuariosUI(usuario).setVisible(true);
-                PrincipalAdminUI.this.dispose();
-            }
-        });
-
-        menuTab.addMouseListener(new MouseAdapter() {
-            @Override 
-            public void mouseClicked(MouseEvent e) {
-                new MenuAdminUI().setVisible(true);
-                PrincipalAdminUI.this.dispose();
-            }
-        });
-
-        reservasTab.addMouseListener(new MouseAdapter() {
-            @Override 
-            public void mouseClicked(MouseEvent e) {
-                String mensaje = "Turnos Actuales del Comedor:\n\n" +
-                                 "DESAYUNO:\n" +
-                                 "• 07:00 - 08:00\n" +
-                                 "• 08:00 - 09:00\n" +
-                                 "• 09:00 - 10:00\n\n" +
-                                 "ALMUERZO:\n" +
-                                 "• 12:00 - 13:00\n" +
-                                 "• 13:00 - 14:00\n" +
-                                 "• 14:00 - 15:00";
-                
-                JOptionPane.showMessageDialog(PrincipalAdminUI.this, 
-                    mensaje, 
-                    "Administración de Turnos", 
-                    JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-
-        costosTab.addMouseListener(new MouseAdapter() {
-            @Override 
-            public void mouseClicked(MouseEvent e) {
-                new DialogoCCB(PrincipalAdminUI.this).setVisible(true);
-            }
-        });
-
-        menuOrdenTab.addMouseListener(new MouseAdapter() {
-            @Override 
-            public void mouseClicked(MouseEvent e) {
-                new MenuUserUI(usuario).setVisible(true);
-                PrincipalAdminUI.this.dispose();
-            }
-        });
-
-        cerrarSesionTab.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                int confirm = JOptionPane.showConfirmDialog(PrincipalAdminUI.this,
-                        "¿Está seguro de que desea cerrar la sesión?",
-                        "Confirmar Cierre de Sesión",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    new InicioSesionUI().setVisible(true);
-                    PrincipalAdminUI.this.dispose();
-                }
-            }
-        });
-
-        // Añadir pestañas al panel
-        tabsPanel.add(usuarioTab);
-        tabsPanel.add(menuTab);
-        tabsPanel.add(reservasTab);
-        tabsPanel.add(costosTab);
-        tabsPanel.add(menuOrdenTab);
-        tabsPanel.add(cerrarSesionTab);
-        
-        // --- BARRA INFERIOR ---
-        JPanel bottomBarContainer = new JPanel(new BorderLayout());
-        bottomBarContainer.setOpaque(false);
-        bottomBarContainer.setPreferredSize(new Dimension(getWidth(), 160));
-        
-        // --- CONTENEDOR PRINCIPAL DE LA BARRA SUPERIOR ---
-        JPanel topBarContainer = new JPanel(new BorderLayout());
-        topBarContainer.setOpaque(false);
-        topBarContainer.setPreferredSize(new Dimension(getWidth(), 160));
-
-        // Panel para el logo (izquierda)
-        JPanel logoPanel = new JPanel(new GridBagLayout());
-        logoPanel.setOpaque(false);
-        logoPanel.setPreferredSize(new Dimension(500, 160));
-
-        GridBagConstraints gbcLogo = new GridBagConstraints();
-        gbcLogo.gridx = 0;
-        gbcLogo.gridy = 0;
-        gbcLogo.anchor = GridBagConstraints.WEST;
-        gbcLogo.insets = new Insets(0, -31, 0, 0);
-
-        // Contenedor para centrar verticalmente el logo
-        JPanel logoVerticalCenter = new JPanel(new GridBagLayout());
-        logoVerticalCenter.setOpaque(false);
-        GridBagConstraints gbcLogoCenter = new GridBagConstraints();
-        gbcLogoCenter.gridx = 0;
-        gbcLogoCenter.gridy = 0;
-        gbcLogoCenter.weighty = 1.0;
-        gbcLogoCenter.anchor = GridBagConstraints.CENTER;
-        logoVerticalCenter.add(brandLabel, gbcLogoCenter);
-
-        logoPanel.add(logoVerticalCenter, gbcLogo);
-
-        // Panel para las pestañas (derecha)
-        JPanel tabsContainer = new JPanel(new GridBagLayout());
-        tabsContainer.setOpaque(false);
-
-        GridBagConstraints gbcTabs = new GridBagConstraints();
-        gbcTabs.gridx = 0;
-        gbcTabs.gridy = 0;
-        gbcTabs.weighty = 1.0;
-        gbcTabs.anchor = GridBagConstraints.CENTER;
-
-        // Contenedor para centrar verticalmente las pestañas
-        JPanel tabsVerticalCenter = new JPanel(new BorderLayout());
-        tabsVerticalCenter.setOpaque(false);
-        tabsVerticalCenter.add(tabsPanel, BorderLayout.CENTER);
-
-        tabsContainer.add(tabsVerticalCenter, gbcTabs);
-
-        // Añadir logo a la izquierda y pestañas a la derecha
-        topBarContainer.add(logoPanel, BorderLayout.WEST);
-        topBarContainer.add(tabsContainer, BorderLayout.EAST);
-
-        // Agregar el contenedor directamente a la parte norte del backgroundPanel
-        backgroundPanel.add(topBarContainer, BorderLayout.NORTH);
-
-        // --- MENSAJE DE BIENVENIDA ---
-        JPanel welcomePanel = new JPanel(new GridBagLayout());
-        welcomePanel.setOpaque(false);
-        
-        // Panel contenedor con márgenes y posible fondo
-        JPanel welcomeContainer = new JPanel(new GridBagLayout());
-        // Fondo semitransparente redondeado para el mensaje
-        welcomeContainer.setOpaque(false); 
-        welcomeContainer = new JPanel(new GridBagLayout()) {
+        JLabel lblFoto = new JLabel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(0, 0, 0, 80)); // Fondo negro semitransparente
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+                
+                // Fondo negro para la foto
+                g2.setColor(Color.BLACK);
+                g2.fillRoundRect(2, 2, getWidth()-4, getHeight()-4, 10, 10);
+                
+                // Intentar cargar foto del admin
+                try {
+                    URL imageUrl = getClass().getResource("/com/comedor/resources/images/usuarios/" + usuario.obtCedula() + ".jpg");
+                    if (imageUrl != null) {
+                        BufferedImage foto = ImageIO.read(imageUrl);
+                        // Escalar foto para que quepa
+                        Image scaled = foto.getScaledInstance(getWidth()-8, getHeight()-8, Image.SCALE_SMOOTH);
+                        g2.drawImage(scaled, 4, 4, getWidth()-8, getHeight()-8, this);
+                    } else {
+                        // Si no hay foto, mostrar iniciales
+                        g2.setColor(Color.WHITE);
+                        g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
+                        String iniciales = obtenerIniciales(usuario.obtNombre());
+                        FontMetrics fm = g2.getFontMetrics();
+                        int x = (getWidth() - fm.stringWidth(iniciales)) / 2;
+                        int y = (getHeight() + fm.getAscent()) / 2;
+                        g2.drawString(iniciales, x, y);
+                    }
+                } catch (Exception e) {
+                    // Si hay error, mostrar iniciales
+                    g2.setColor(Color.WHITE);
+                    g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
+                    String iniciales = obtenerIniciales(usuario.obtNombre());
+                    FontMetrics fm = g2.getFontMetrics();
+                    int x = (getWidth() - fm.stringWidth(iniciales)) / 2;
+                    int y = (getHeight() + fm.getAscent()) / 2;
+                    g2.drawString(iniciales, x, y);
+                }
+                
                 g2.dispose();
             }
         };
-        welcomeContainer.setOpaque(false);
-        welcomeContainer.setBorder(new EmptyBorder(20, 40, 20, 40));
-        
-        // Título principal
-        JLabel welcomeTitle = new JLabel("<html><div style='text-align: center;'>"
-            + "Panel de Administración<br>"
-            + "Sistema de Asignación y Gestión del Comedor"
-            + "</div></html>");
-        welcomeTitle.setFont(new Font("Segoe UI", Font.BOLD, 30));
-        welcomeTitle.setForeground(Color.WHITE);
-        
-        // Panel para el mensaje de bienvenida
-        JPanel messagePanel = new JPanel(new BorderLayout());
-        messagePanel.setOpaque(false);
-        messagePanel.setBorder(new EmptyBorder(20, 0, 0, 0));
-    
-        JLabel iconLabel = new JLabel("🔧") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 72));
-                g2.setColor(Color.WHITE);
-                FontMetrics fm = g2.getFontMetrics();
-                int x = (getWidth() - fm.stringWidth("🔧")) / 2;
-                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
-                g2.drawString("🔧", x, y);
-                g2.dispose();
-            }
-        };
-        iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 72));
-        iconLabel.setForeground(Color.WHITE);
-        iconLabel.setPreferredSize(new Dimension(100, 100));
+        fotoPanel.add(lblFoto, BorderLayout.CENTER);
 
+        headerPanel.add(fotoPanel, BorderLayout.WEST);
+        headerPanel.add(title, BorderLayout.CENTER);
+        headerPanel.add(btnLogout, BorderLayout.EAST);
+        backgroundPanel.add(headerPanel, BorderLayout.NORTH);
+
+        // --- SIDEBAR ---
+        SideBarNavigation sideBar = new SideBarNavigation(usuario, () -> {
+            dispose();
+        });
+        backgroundPanel.add(sideBar, BorderLayout.WEST);
+
+        // --- CONTENIDO DERECHO ---
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setOpaque(false);
+
+        // --- CONTENIDO (PESTAÑAS) ---
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         
-        // Configurar GridBagConstraints para centrar todo
+        tabs.addTab("Editor de Menú", crearPanelEditorMenu());
+        tabs.addTab("Gestión de Costos", crearPanelCostos());
+
+        rightPanel.add(tabs, BorderLayout.CENTER);
+        backgroundPanel.add(rightPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel crearPanelEditorMenu() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(COLOR_FONDO_PANEL);
+
+        // Panel Desayuno
+        JPanel pDesayuno = crearPanelPlatillo("Desayuno");
+        txtNombreDes = (JTextField) pDesayuno.getClientProperty("nombre");
+        txtPrecioDes = (JTextField) pDesayuno.getClientProperty("precio");
+        txtDescDes = (JTextArea) pDesayuno.getClientProperty("desc");
+        txtNutriDes = (JTextArea) pDesayuno.getClientProperty("nutri");
+        lblImgDes = (JLabel) pDesayuno.getClientProperty("img");
+        JButton btnImgDes = (JButton) pDesayuno.getClientProperty("btnImg");
+        
+        btnImgDes.addActionListener(e -> seleccionarImagen(lblImgDes, true));
+
+        // Panel Almuerzo
+        JPanel pAlmuerzo = crearPanelPlatillo("Almuerzo");
+        txtNombreAlm = (JTextField) pAlmuerzo.getClientProperty("nombre");
+        txtPrecioAlm = (JTextField) pAlmuerzo.getClientProperty("precio");
+        txtDescAlm = (JTextArea) pAlmuerzo.getClientProperty("desc");
+        txtNutriAlm = (JTextArea) pAlmuerzo.getClientProperty("nutri");
+        lblImgAlm = (JLabel) pAlmuerzo.getClientProperty("img");
+        JButton btnImgAlm = (JButton) pAlmuerzo.getClientProperty("btnImg");
+
+        btnImgAlm.addActionListener(e -> seleccionarImagen(lblImgAlm, false));
+
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.add(pDesayuno);
+        container.add(pAlmuerzo);
+
+        // Botón Guardar Global
+        JButton btnGuardar = new JButton("GUARDAR CAMBIOS EN EL MENÚ");
+        btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        btnGuardar.setBackground(new Color(0, 100, 0));
+        btnGuardar.setForeground(Color.WHITE);
+        btnGuardar.addActionListener(e -> guardarCambios());
+        
+        panel.add(container, BorderLayout.CENTER);
+        panel.add(btnGuardar, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel crearPanelPlatillo(String titulo) {
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(COLOR_AZUL_INST, 2), 
+            " " + titulo + " ", 
+            TitledBorder.CENTER, 
+            TitledBorder.TOP, 
+            new Font("Segoe UI", Font.BOLD, 20), 
+            COLOR_AZUL_INST
+        ));
+
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0; gbc.gridy = 0;
+
+        // Imagen Preview
+        JLabel lblImg = new JLabel("Sin Imagen", SwingConstants.CENTER);
+        lblImg.setPreferredSize(new Dimension(200, 200));
+        lblImg.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        gbc.gridheight = 4; gbc.gridwidth = 1; gbc.fill = GridBagConstraints.BOTH;
+        card.add(lblImg, gbc);
+
+        // Botón subir imagen
+        JButton btnSubir = new JButton("Cambiar Imagen");
+        btnSubir.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnSubir.setBackground(COLOR_AZUL_INST);
+        btnSubir.setForeground(Color.WHITE);
+        btnSubir.setFocusPainted(false);
+        btnSubir.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnSubir.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnSubir.setBackground(COLOR_AZUL_HOVER); }
+            public void mouseExited(MouseEvent e) { btnSubir.setBackground(COLOR_AZUL_INST); }
+        });
+
+        gbc.gridy = 4; gbc.gridheight = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        card.add(btnSubir, gbc);
+
+        // Campos de texto (Columna derecha)
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0;
         
-        // Emoji 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.CENTER;
-        welcomeContainer.add(iconLabel, gbc);
-        
-        // Título
+        card.add(new JLabel("Nombre del Platillo:"), gbc);
+        JTextField txtNombre = new JTextField();
         gbc.gridy = 1;
-        gbc.insets = new Insets(0, 0, 5, 0);
-        welcomeContainer.add(welcomeTitle, gbc);
-        
-        // Mensaje
+        card.add(txtNombre, gbc);
+
+        gbc.gridy = 2;
+        card.add(new JLabel("Precio Base ($):"), gbc);
+        JTextField txtPrecio = new JTextField();
         gbc.gridy = 3;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        welcomeContainer.add(messagePanel, gbc);
-        
-        // Añadir el contenedor al panel de bienvenida
-        welcomePanel.add(welcomeContainer);
-        
-        // Añadir el panel de bienvenida al centro del backgroundPanel
-        backgroundPanel.add(welcomePanel, BorderLayout.CENTER);
+        card.add(txtPrecio, gbc);
 
-        // // Añadir barra inferior al backgroundPanel
-        backgroundPanel.add(bottomBarContainer, BorderLayout.SOUTH);
-    };
+        // Descripción
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        card.add(new JLabel("Descripción del Plato:"), gbc);
+        
+        JTextArea txtDesc = new JTextArea(3, 20);
+        txtDesc.setLineWrap(true);
+        txtDesc.setWrapStyleWord(true);
+        JScrollPane scrollDesc = new JScrollPane(txtDesc);
+        gbc.gridy = 6; gbc.weighty = 1.0; gbc.fill = GridBagConstraints.BOTH;
+        card.add(scrollDesc, gbc);
 
-    private JLabel createTabLabel(String text) {
-    JLabel tab = new JLabel(text);
-    tab.setFont(new Font("Segoe UI", Font.BOLD, 18));
-    tab.setForeground(Color.WHITE);
-    tab.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    
-    // Efecto hover
-    tab.addMouseListener(new MouseAdapter() {
-        @Override
-        public void mouseEntered(MouseEvent e) {
-            tab.setForeground(new Color(255, 255, 255, 220)); // Más opaco
-            tab.setFont(new Font("Segoe UI", Font.BOLD, 19)); // Ligero aumento
+        // Info Nutricional
+        gbc.gridy = 7; gbc.weighty = 0;
+        card.add(new JLabel("Información Nutricional (Calorías, Proteínas, etc.):"), gbc);
+        
+        JTextArea txtNutri = new JTextArea(3, 20);
+        txtNutri.setLineWrap(true);
+        txtNutri.setWrapStyleWord(true);
+        JScrollPane scrollNutri = new JScrollPane(txtNutri);
+        gbc.gridy = 8; gbc.weighty = 1.0;
+        card.add(scrollNutri, gbc);
+
+        // Guardar referencias en el panel para acceder luego
+        card.putClientProperty("nombre", txtNombre);
+        card.putClientProperty("precio", txtPrecio);
+        card.putClientProperty("desc", txtDesc);
+        card.putClientProperty("nutri", txtNutri);
+        card.putClientProperty("img", lblImg);
+        card.putClientProperty("btnImg", btnSubir);
+
+        return card;
+    }
+
+    private JPanel crearPanelCostos() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(COLOR_FONDO_PANEL);
+
+        JButton btnCCB = new JButton("Calcular Costo por Bandeja (CCB)");
+        btnCCB.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        btnCCB.setPreferredSize(new Dimension(350, 60));
+        btnCCB.setBackground(COLOR_AZUL_INST);
+        btnCCB.setForeground(Color.WHITE);
+        btnCCB.setFocusPainted(false);
+        btnCCB.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCCB.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnCCB.setBackground(COLOR_AZUL_HOVER); }
+            public void mouseExited(MouseEvent e) { btnCCB.setBackground(COLOR_AZUL_INST); }
+        });
+        btnCCB.addActionListener(e -> new DialogoCCB(this).setVisible(true));
+
+        panel.add(btnCCB);
+        return panel;
+    }
+
+    private String obtenerIniciales(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return "A";
+        }
+        String[] partes = nombre.trim().split(" ");
+        StringBuilder iniciales = new StringBuilder();
+        for (String parte : partes) {
+            if (!parte.isEmpty()) {
+                iniciales.append(parte.charAt(0));
+                if (iniciales.length() >= 2) break;
+            }
+        }
+        return iniciales.toString().toUpperCase();
+    }
+
+    // --- LÓGICA ---
+
+    private void cargarDatosActuales() {
+        // Cargar Desayuno
+        Menu mDes = servicioMenu.obtenerMenu("Desayuno");
+        if (mDes != null && !mDes.obtPlatillos().isEmpty()) {
+            Platillo p = mDes.obtPlatillos().get(0);
+            txtNombreDes.setText(p.obtNombre());
+            txtPrecioDes.setText(String.valueOf(p.obtPrecio()));
+            txtDescDes.setText(p.obtDescripcion());
+            txtNutriDes.setText(p.obtInfoNutricional());
+            rutaImgDes = p.obtImagen();
+            actualizarPreview(lblImgDes, rutaImgDes);
+        }
+
+        // Cargar Almuerzo
+        Menu mAlm = servicioMenu.obtenerMenu("Almuerzo");
+        if (mAlm != null && !mAlm.obtPlatillos().isEmpty()) {
+            Platillo p = mAlm.obtPlatillos().get(0);
+            txtNombreAlm.setText(p.obtNombre());
+            txtPrecioAlm.setText(String.valueOf(p.obtPrecio()));
+            txtDescAlm.setText(p.obtDescripcion());
+            txtNutriAlm.setText(p.obtInfoNutricional());
+            rutaImgAlm = p.obtImagen();
+            actualizarPreview(lblImgAlm, rutaImgAlm);
+        }
+    }
+
+    private void seleccionarImagen(JLabel lblPreview, boolean esDesayuno) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes JPG/PNG", "jpg", "png", "jpeg"));
+        
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File archivo = fileChooser.getSelectedFile();
+            String rutaAbsoluta = archivo.getAbsolutePath();
+            
+            if (esDesayuno) {
+                rutaImgDes = rutaAbsoluta;
+            } else {
+                rutaImgAlm = rutaAbsoluta;
+            }
+            
+            actualizarPreview(lblPreview, rutaAbsoluta);
+        }
+    }
+
+    private void actualizarPreview(JLabel label, String ruta) {
+        if (ruta == null || ruta.isEmpty()) {
+            label.setText("Sin Imagen");
+            label.setIcon(null);
+            return;
         }
         
-        @Override
-        public void mouseExited(MouseEvent e) {
-            tab.setForeground(Color.WHITE); // Blanco normal
-            tab.setFont(new Font("Segoe UI", Font.BOLD, 18)); // Tamaño normal
+        try {
+            BufferedImage img = null;
+            File f = new File(ruta);
+            if (f.exists()) {
+                img = ImageIO.read(f);
+            } else {
+                // Intento cargar desde recursos si es ruta relativa
+                URL url = getClass().getResource(ruta);
+                if (url != null) img = ImageIO.read(url);
+            }
+
+            if (img != null) {
+                // Escalar imagen para que quepa en el label (200x200)
+                Image scaled = img.getScaledInstance(200, 200, Image.SCALE_SMOOTH);
+                label.setIcon(new ImageIcon(scaled));
+                label.setText("");
+            } else {
+                label.setText("No encontrada");
+                label.setIcon(null);
+            }
+        } catch (Exception e) {
+            label.setText("Error carga");
+            e.printStackTrace();
         }
-    });
-    
-    return tab;
-    };
+    }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new PrincipalAdminUI().setVisible(true));
-    };
+    private void guardarCambios() {
+        try {
+            // 1. Guardar Desayuno
+            String nomDes = txtNombreDes.getText();
+            double preDes = Double.parseDouble(txtPrecioDes.getText().replace(",", "."));
+            String descDes = txtDescDes.getText();
+            String nutriDes = txtNutriDes.getText();
+            
+            Platillo pDes = new Platillo(nomDes, descDes, preDes, rutaImgDes, nutriDes);
+            Menu mDes = new Menu("Desayuno");
+            mDes.agregarPlatillo(pDes);
+            servicioMenu.configurarMenu(usuario, mDes);
 
-};
+            // 2. Guardar Almuerzo
+            String nomAlm = txtNombreAlm.getText();
+            double preAlm = Double.parseDouble(txtPrecioAlm.getText().replace(",", "."));
+            String descAlm = txtDescAlm.getText();
+            String nutriAlm = txtNutriAlm.getText();
+
+            Platillo pAlm = new Platillo(nomAlm, descAlm, preAlm, rutaImgAlm, nutriAlm);
+            Menu mAlm = new Menu("Almuerzo");
+            mAlm.agregarPlatillo(pAlm);
+            servicioMenu.configurarMenu(usuario, mAlm);
+
+            JOptionPane.showMessageDialog(this, "¡Menú actualizado correctamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Error en el formato del precio. Use solo números y punto decimal.", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}

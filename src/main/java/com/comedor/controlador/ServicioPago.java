@@ -2,6 +2,7 @@ package com.comedor.controlador;
 
 import com.comedor.modelo.entidades.Monedero;
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.excepciones.SaldoInsuficienteException;
 import com.comedor.modelo.persistencia.RepoUsuarios;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class ServicioPago {
         double saldoActual = monedero.obtSaldo();
 
         if (saldoActual < monto) {
-            throw new Exception(String.format("Saldo insuficiente. Costo: $%.2f, Disponible: $%.2f", monto, saldoActual));
+            throw new SaldoInsuficienteException(String.format("Saldo insuficiente. Costo: $%.2f, Disponible: $%.2f", monto, saldoActual));
         }
 
         monedero.descontar(monto);

@@ -1,0 +1,67 @@
+[2026-03-01 18:05:53] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 18:06:07] INFO: Turno seleccionado: 07:00 - 08:00 para usuario 29617475
+[2026-03-01 18:12:08] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 18:20:51] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 18:25:09] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 18:27:18] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 18:27:40] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 18:37:21] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 18:37:30] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 19:15:41] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 19:15:50] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 19:15:58] INFO: Turno seleccionado: 07:00 - 08:00 para usuario 29617475
+[2026-03-01 19:16:13] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 19:16:21] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 19:24:15] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 19:24:39] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 19:31:35] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 19:37:36] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 19:37:52] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 19:37:59] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 19:39:39] INFO: Inicio de sesión exitoso para cédula: 10000004
+[2026-03-01 19:40:11] INFO: Turno seleccionado: 07:00 - 08:00 para usuario 10000004
+[2026-03-01 19:56:07] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 19:58:34] INFO: Inicio de sesión exitoso para cédula: 10000004
+[2026-03-01 20:02:40] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:41] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:42] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:43] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:43] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:43] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:43] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:43] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:43] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:44] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:44] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:44] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:44] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:45] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:46] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:46] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:02:55] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:06:46] INFO: Usuario 00000000 volviendo al menú principal
+[2026-03-01 20:26:29] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:26:29] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 20:26:30] INFO: Función de gestión de usuarios no implementada aún
+[2026-03-01 21:03:42] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:05:31] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:06:52] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:08:52] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:09:48] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:16:13] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:17:54] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:21:37] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 21:21:57] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 21:24:31] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 22:54:25] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 22:54:31] INFO: Turno seleccionado: 13:00 - 14:00 para usuario 29617475
+[2026-03-01 22:55:33] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:02:33] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:05:53] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:08:10] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:14:44] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:17:03] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:22:52] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:22:58] INFO: Usuario 29617475 volviendo al menú principal
+[2026-03-01 23:25:18] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-01 23:26:31] INFO: Inicio de sesión exitoso para cédula: 29617475

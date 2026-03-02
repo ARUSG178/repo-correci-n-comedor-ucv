@@ -48,7 +48,7 @@ public class ReservaFechaUI extends JFrame {
         headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
         
         JLabel lblTitulo = new JLabel("Fecha de Reserva", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitulo.setForeground(Color.WHITE);
         headerPanel.add(lblTitulo, BorderLayout.CENTER);
 

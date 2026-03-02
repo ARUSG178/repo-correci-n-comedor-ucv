@@ -4,11 +4,13 @@ import com.comedor.controlador.ServicioBiometrico;
 import com.comedor.controlador.ServicioPago;
 import com.comedor.modelo.persistencia.RepoUsuarios;
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.excepciones.BiometriaFallidaException;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -19,6 +21,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Properties;
+import java.awt.Window;
 
 public class ReconocimientoFacialUI extends JFrame {
 
@@ -77,9 +80,10 @@ public class ReconocimientoFacialUI extends JFrame {
                 g2d.fillRect(0, 0, getWidth(), getHeight());
                 
                 g2d.setColor(COLOR_AZUL_INST);
-                int barHeight = 80;
-                g2d.fillRect(0, 0, getWidth(), barHeight);
-                g2d.fillRect(0, getHeight() - barHeight, getWidth(), barHeight);
+                int topBarHeight = 60;
+                int bottomBarHeight = 30;
+                g2d.fillRect(0, 0, getWidth(), topBarHeight);
+                g2d.fillRect(0, getHeight() - bottomBarHeight, getWidth(), bottomBarHeight);
             }
         };
         mainPanel.setLayout(new BorderLayout());
@@ -87,7 +91,7 @@ public class ReconocimientoFacialUI extends JFrame {
         // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
-        headerPanel.setPreferredSize(new Dimension(getWidth(), 80));
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
         
         JLabel lblTitulo = new JLabel("Validación de Identidad", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
@@ -132,7 +136,11 @@ public class ReconocimientoFacialUI extends JFrame {
         centerPanel.add(previewContainer, gbc);
 
         JButton btnSubir = new JButton("Cargar Foto");
-        btnSubir.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        btnSubir.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnSubir.setBackground(COLOR_AZUL_INST);
+        btnSubir.setForeground(Color.WHITE);
+        btnSubir.setFocusPainted(false);
+        btnSubir.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnSubir.addActionListener(e -> seleccionarFoto());
         gbc.gridy = 2;
         centerPanel.add(btnSubir, gbc);
@@ -208,15 +216,33 @@ public class ReconocimientoFacialUI extends JFrame {
             double similitud = sBiometrico.calcularSimilitud(usuario, archivoSeleccionado);
             
             if (similitud <= 60.0) {
-                throw new Exception(String.format("Biometría fallida.\nSimilitud: %.2f%%\nSe requiere > 60%%", similitud));
+                throw new BiometriaFallidaException(String.format("Biometría fallida.\nSimilitud: %.2f%%\nSe requiere > 60%%", similitud));
             }
 
             // 2. Delegar cobro
             ServicioPago sPago = new ServicioPago();
             sPago.procesarCobro(usuario, costoPlatillo);
 
+            // 3. Actualizar historial de reservas
+            try {
+                // Abrir o actualizar la ventana de historial
+                SwingUtilities.invokeLater(() -> {
+                    // Buscar si ya hay una ventana de historial abierta
+                    for (Window window : Window.getWindows()) {
+                        if (window instanceof HistorialReservasUI) {
+                            window.dispose(); // Cerrar la ventana vieja
+                            break;
+                        }
+                    }
+                    // Crear nueva ventana de historial con datos actualizados
+                    new HistorialReservasUI(usuario).setVisible(true);
+                });
+            } catch (Exception ex) {
+                System.err.println("Error al actualizar historial: " + ex.getMessage());
+            }
+
             // Si no hubo excepciones, todo fue exitoso
-                String mensaje = String.format("¡Pago Exitoso!\nSimilitud Biométrica: %.2f%%\nReserva confirmada para: %s", 
+                String mensaje = String.format("¡Pago Exitoso!\nSimilitud Biométrica: %.2f%%\nReserva confirmada para: %s\n\nEl historial ha sido actualizado.", 
                                              similitud, fechaReserva.toString().replace("T", " "));
                 JOptionPane.showMessageDialog(this, mensaje, "Acceso Concedido", JOptionPane.INFORMATION_MESSAGE);
                 // Al ser un módulo separado, se cierra tras el éxito.

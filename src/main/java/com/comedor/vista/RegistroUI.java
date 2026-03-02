@@ -47,7 +47,8 @@ public class RegistroUI extends JFrame {
     private static final Color COLOR_OVERLAY = new Color(0, 51, 102, 140);      // Filtro sobre imagen
     private static final Color COLOR_FORM_BG = new Color(255, 255, 255);            // Fondo blanco
     private static final Color COLOR_INPUT_BG = new Color(0, 85, 170);            // Fondo azul claro inputs
-    private static final Color COLOR_BTN_AZUL = new Color(0, 60, 120);            // Botón Registrar
+    private static final Color COLOR_BTN_AZUL = new Color(0, 51, 102);            // Botón Registrar
+    private static final Color COLOR_BTN_HOVER = new Color(0, 81, 132);           // Hover
     private static final Color COLOR_PLACEHOLDER = new Color(255, 255, 255, 160); // Texto fantasma
 
     private BufferedImage backgroundImage;
@@ -96,9 +97,10 @@ public class RegistroUI extends JFrame {
 
                 // Barras sólidas superior e inferior
                 g2d.setColor(COLOR_AZUL_INST);
-                int barHeight = 135;
-                g2d.fillRect(0, 0, getWidth(), barHeight);
-                g2d.fillRect(0, getHeight() - barHeight, getWidth(), barHeight);
+                int topBarHeight = 60;
+                int bottomBarHeight = 30;
+                g2d.fillRect(0, 0, getWidth(), topBarHeight);
+                g2d.fillRect(0, getHeight() - bottomBarHeight, getWidth(), bottomBarHeight);
             }
         };
         backgroundPanel.setLayout(new BorderLayout());
@@ -304,19 +306,37 @@ public class RegistroUI extends JFrame {
     // Agrega una etiqueta y un campo de texto al panel
     private void addLabelAndField(JPanel p, String t, JComponent f, GridBagConstraints g, int y) {
         g.gridy = y;
-        JLabel l = new JLabel(t); l.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        JLabel l = new JLabel(t);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 13));
         l.setForeground(COLOR_AZUL_INST);
-        JPanel c = new JPanel(new BorderLayout(0, 5)); c.setOpaque(false);
-        c.add(l, BorderLayout.NORTH); c.add(f, BorderLayout.CENTER);
+        JPanel c = new JPanel(new BorderLayout(0, 5));
+        c.setOpaque(false);
+        c.add(l, BorderLayout.NORTH);
+        c.add(f, BorderLayout.CENTER);
         p.add(c, g);
     }
 
     // Aplica estilo visual a los botones
     private void styleButton(JButton b) {
         b.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        b.setBackground(COLOR_BTN_AZUL); b.setForeground(Color.WHITE);
-        b.setFocusPainted(false); b.setBorder(new EmptyBorder(10, 30, 10, 30));
+        b.setBackground(COLOR_BTN_AZUL);
+        b.setForeground(Color.WHITE);
+        b.setOpaque(true);
+        b.setContentAreaFilled(true);
+        b.setFocusPainted(false);
+        b.setBorder(new EmptyBorder(10, 30, 10, 30));
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        b.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                b.setBackground(COLOR_BTN_HOVER);
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                b.setBackground(COLOR_BTN_AZUL);
+            }
+        });
     }
 
     // Punto de entrada para pruebas de la interfaz

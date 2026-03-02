@@ -47,7 +47,6 @@ public class InicioSesionUI extends JFrame {
     private static final Color COLOR_AZUL_INST = new Color(0, 51, 102); // Azul Institucional
     private static final Color COLOR_FORM_BG = new Color(255, 255, 255); // Blanco
     private static final Color COLOR_INPUT_BG = new Color(0, 85, 170); // Azul más claro para inputs
-    private static final Color COLOR_BTN_AZUL = new Color(0, 60, 120); // Azul botón
     private static final Color COLOR_TEXTO = new Color(0, 51, 102); // Texto azul oscuro
 
     private BufferedImage backgroundImage;
@@ -134,42 +133,53 @@ public class InicioSesionUI extends JFrame {
 
         ShadowRoundedPanel card = new ShadowRoundedPanel(new GridBagLayout());
         card.setBackground(COLOR_FORM_BG);
-        card.setBorder(new EmptyBorder(50, 50, 50, 50));
-        card.setPreferredSize(new Dimension(450, 550)); // Ajustado
+        card.setBorder(new EmptyBorder(40, 40, 40, 40)); // Padding reducido
+        card.setPreferredSize(new Dimension(450, 500)); // Más compacto
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 0; gbc.insets = new Insets(10, 0, 10, 0);
+        gbc.gridx = 0; gbc.insets = new Insets(8, 0, 8, 0); // Espaciado reducido
 
         JLabel title = new JLabel("Iniciar Sesión");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        title.setForeground(COLOR_AZUL_INST);
-        gbc.gridy = 0; gbc.insets = new Insets(0, 0, 30, 0);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 28)); // Fuente más pequeña
+        title.setForeground(new Color(0, 81, 132)); // Azul más oscuro
+        gbc.gridy = 0; gbc.insets = new Insets(0, 0, 25, 0); // Menos espacio
         card.add(title, gbc);
 
         txtCedula = new ModernTextField("Ej. 12345678");
         addLabelAndField(card, "Cédula:", txtCedula, gbc, 1);
 
-        txtClave = new ModernPasswordField("••••••••");
+        txtClave = new ModernPasswordField("•••••••••");
         addLabelAndField(card, "Contraseña:", txtClave, gbc, 2);
 
         JButton btnEntrar = new JButton("Entrar");
-        styleButton(btnEntrar);
+        styleButton(btnEntrar); // Mantener metodo original pero con mejoras
         btnEntrar.addActionListener(e -> ejecutarLogin());
         
-        gbc.gridy = 3; gbc.insets = new Insets(40, 0, 10, 0);
+        gbc.gridy = 3; gbc.insets = new Insets(30, 0, 15, 0); // Menos espacio arriba
         card.add(btnEntrar, gbc);
 
         JButton btnIrRegistro = new JButton("¿No tienes cuenta? Regístrate");
         btnIrRegistro.setContentAreaFilled(false);
         btnIrRegistro.setBorderPainted(false);
-        btnIrRegistro.setForeground(COLOR_AZUL_INST);
+        btnIrRegistro.setForeground(new Color(0, 123, 255)); // Azul brillante
+        btnIrRegistro.setFont(new Font("Segoe UI", Font.PLAIN, 13)); // Fuente más pequeña
         btnIrRegistro.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnIrRegistro.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btnIrRegistro.setForeground(new Color(0, 86, 179)); // Hover más oscuro
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btnIrRegistro.setForeground(new Color(0, 123, 255)); // Color original
+            }
+        });
         btnIrRegistro.addActionListener(e -> {
             new RegistroUI().setVisible(true);
             this.dispose();
         });
-        gbc.gridy = 4;
+        gbc.gridy = 4; gbc.insets = new Insets(5, 0, 0, 0); // Menos espacio abajo
         card.add(btnIrRegistro, gbc);
 
         panel.add(card);
@@ -241,12 +251,25 @@ public class InicioSesionUI extends JFrame {
 
     // Aplica el estilo visual estándar a los botones de acción
     private void styleButton(JButton b) {
-        b.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        b.setBackground(COLOR_BTN_AZUL);
+        b.setFont(new Font("Segoe UI", Font.BOLD, 16)); // Fuente más moderna
+        b.setBackground(new Color(0, 123, 255)); // Azul brillante moderno
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
+        b.setBorderPainted(false); // Sin borde
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        b.setBorder(new EmptyBorder(12, 0, 12, 0));
+        b.setBorder(new EmptyBorder(15, 25, 15, 25)); // Más padding horizontal
+        
+        // Efecto hover
+        b.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                b.setBackground(new Color(0, 86, 179)); // Azul más oscuro al hover
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                b.setBackground(new Color(0, 123, 255)); // Volver al color original
+            }
+        });
     }
 
     private class ModernTextField extends JTextField {
@@ -331,4 +354,4 @@ public class InicioSesionUI extends JFrame {
             g2.dispose();
         }
     }
-}// fastidio los commits git se bugea
+}
