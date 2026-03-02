@@ -3,6 +3,7 @@ package com.comedor.vista.usuario;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.vista.components.FondoSemitransparentePanel;
 import com.comedor.vista.components.TurnoToggleButton;
+import com.comedor.vista.components.SideBarNavigation;
 import com.comedor.vista.listeners.VolverMenuListener;
 import com.comedor.vista.listeners.SeleccionarTurnoListener;
 
@@ -74,6 +75,12 @@ public class SeleccionarTurnoUI extends JFrame {
         };
         mainPanel.setLayout(new BorderLayout());
 
+        // --- SIDEBAR ---
+        SideBarNavigation sideBar = new SideBarNavigation(usuario, () -> {
+            dispose();
+        });
+        mainPanel.add(sideBar, BorderLayout.WEST);
+
         // --- HEADER ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
@@ -126,7 +133,7 @@ public class SeleccionarTurnoUI extends JFrame {
         centerPanel.add(turnosContainer);
 
         // --- FOOTER ---
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 20));
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 40));
         footerPanel.setOpaque(false);
 
         JButton btnContinuar = new JButton("Continuar a Verificación");

@@ -1,5 +1,5 @@
 Profesor;6017761;Miryam Soto;123456;true;0;0.0;u;a
-Estudiante;29617475;Jesús Soto;123456;true;0;420.14;Computación;Ciencias
+Estudiante;29617475;Jesús Soto;123456;true;0;418.71;Computación;Ciencias
 Estudiante;10000001;Estudiante Test;123456;true;0;100.0;Computación;Ciencias
 Profesor;10000002;Profesor Test;123456;true;0;0.0;Matemáticas;PROF0001
 Empleado;10000003;Empleado Test;123456;true;0;50.0;Analista;Recursos Humanos;EMP00001

@@ -152,7 +152,7 @@ public class ReconocimientoFacialUI extends JFrame {
         centerPanel.add(lblEstado, gbc);
 
         // Footer
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 40));
         footerPanel.setOpaque(false);
 
         btnConfirmar = new JButton("Verificar y Pagar");

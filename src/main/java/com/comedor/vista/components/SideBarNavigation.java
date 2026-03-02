@@ -395,14 +395,6 @@ public class SideBarNavigation extends JPanel {
                 ui.setVisible(true);
             });
         }));
-        sideBar.add(Box.createRigidArea(new Dimension(0, 20))); // Espaciado entre botones
-        
-        sideBar.add(crearBotonNavegacion("\ud83d\udc64", "Mi Perfil", () -> {
-            JOptionPane.showMessageDialog(this, 
-                "Funcionalidad de perfil en desarrollo.\n\nPodrá ver y editar su información personal.", 
-                "Mi Perfil", 
-                JOptionPane.INFORMATION_MESSAGE);
-        }));
     }
 
     private JPanel crearSeparador() {
