@@ -116,14 +116,17 @@ public class ServicioCosto {
             throw new IllegalArgumentException("El monto a recargar debe ser mayor a 0.");
         }
 
-        if (banco == null || banco.trim().isEmpty()) {
-            throw new IllegalArgumentException("Debe seleccionar un banco de procedencia.");
-        }
-        if (referencia == null || referencia.trim().isEmpty()) {
-            throw new IllegalArgumentException("Debe ingresar el número de referencia de la transacción.");
+        boolean esSaldoPana = cedulaDestino != null && !cedulaDestino.trim().isEmpty();
+        if (!esSaldoPana) {
+            if (banco == null || banco.trim().isEmpty()) {
+                throw new IllegalArgumentException("Debe seleccionar un banco de procedencia.");
+            }
+            if (referencia == null || referencia.trim().isEmpty()) {
+                throw new IllegalArgumentException("Debe ingresar el número de referencia de la transacción.");
+            }
         }
 
-        String destino = (cedulaDestino == null || cedulaDestino.trim().isEmpty()) ? usuario.obtCedula() : cedulaDestino.trim();
+        String destino = esSaldoPana ? cedulaDestino.trim() : usuario.obtCedula();
 
         RepoUsuarios repo = new RepoUsuarios();
         List<Usuario> usuarios = repo.listarUsuarios();

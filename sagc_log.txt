@@ -75,3 +75,7 @@
 [2026-03-02 19:00:56] INFO: Inicio de sesión exitoso para cédula: 29617475
 [2026-03-02 19:04:46] INFO: Inicio de sesión exitoso para cédula: 29617475
 [2026-03-02 19:34:51] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 20:12:20] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 20:28:18] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 20:32:55] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-02 20:34:21] INFO: Inicio de sesión exitoso para cédula: 29617475
