@@ -13,6 +13,7 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
@@ -26,6 +27,7 @@ import javax.swing.border.EmptyBorder;
 
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.entidades.Estudiante;
+import com.comedor.modelo.persistencia.RepoSecretaria;
 import com.comedor.vista.components.SideBarNavigation;
 
 public class PrincipalUserUI extends JFrame {
@@ -145,14 +147,15 @@ public class PrincipalUserUI extends JFrame {
             }
         };
         welcomeContainer.setOpaque(false);
-        welcomeContainer.setBorder(new EmptyBorder(40, 50, 40, 50));
+        welcomeContainer.setBorder(new EmptyBorder(25, 40, 25, 40));
         
         // Mensaje personalizado con nombre del usuario
-        JLabel welcomeTitle = new JLabel("<html><div style='text-align: center;'>¡Bienvenido, " + usuario.obtNombre() + "!</div></html>");
+        String nombreCompleto = obtenerNombreDesdeRepositorio(usuario.obtCedula());
+        JLabel welcomeTitle = new JLabel("<html><div style='text-align: center;'>!Bienvenido, " + nombreCompleto + "</div></html>");
         welcomeTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         welcomeTitle.setForeground(Color.WHITE);
         
-        JLabel welcomeSub = new JLabel("<html><div style='text-align: center;'>Utilice el menú de la izquierda para navegar por las funciones del sistema.<br>Acceda al menú del día, gestione su saldo y realice reservas.</div></html>");
+        JLabel welcomeSub = new JLabel("<html><div style='text-align: center;'>Utiliza el menu de la izquierda para acceder a todas las funciones.</div></html>");
         welcomeSub.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         welcomeSub.setForeground(new Color(220, 220, 220));
 
@@ -172,23 +175,33 @@ public class PrincipalUserUI extends JFrame {
                 g2.setColor(Color.BLACK);
                 g2.fillRoundRect(5, 5, getWidth()-10, getHeight()-10, 15, 15);
                 
-                // Intentar cargar foto del usuario
+                // Intentar cargar foto del usuario desde imagenes_bd_secretaria
                 try {
-                    URL imageUrl = getClass().getResource("/com/comedor/resources/images/usuarios/" + usuario.obtCedula() + ".jpg");
-                    if (imageUrl != null) {
-                        BufferedImage foto = ImageIO.read(imageUrl);
+                    // Primero intentar cargar desde imagenes_bd_secretaria
+                    File fotoFile = new File("imagenes_bd_secretaria/" + usuario.obtCedula() + ".jpg");
+                    if (fotoFile.exists() && fotoFile.canRead()) {
+                        BufferedImage foto = ImageIO.read(fotoFile);
                         // Escalar foto para que quepa en el círculo
                         Image scaled = foto.getScaledInstance(getWidth()-20, getHeight()-20, Image.SCALE_SMOOTH);
                         g2.drawImage(scaled, 10, 10, getWidth()-20, getHeight()-20, this);
                     } else {
-                        // Si no hay foto, mostrar iniciales
-                        g2.setColor(Color.WHITE);
-                        g2.setFont(new Font("Segoe UI", Font.BOLD, 36));
-                        String iniciales = obtenerIniciales(usuario.obtNombre());
-                        FontMetrics fm = g2.getFontMetrics();
-                        int x = (getWidth() - fm.stringWidth(iniciales)) / 2;
-                        int y = (getHeight() + fm.getAscent()) / 2;
-                        g2.drawString(iniciales, x, y);
+                        // Si no existe en imagenes_bd_secretaria, intentar desde resources
+                        URL imageUrl = getClass().getResource("/com/comedor/resources/images/usuarios/" + usuario.obtCedula() + ".jpg");
+                        if (imageUrl != null) {
+                            BufferedImage foto = ImageIO.read(imageUrl);
+                            // Escalar foto para que quepa en el círculo
+                            Image scaled = foto.getScaledInstance(getWidth()-20, getHeight()-20, Image.SCALE_SMOOTH);
+                            g2.drawImage(scaled, 10, 10, getWidth()-20, getHeight()-20, this);
+                        } else {
+                            // Si no hay foto, mostrar iniciales
+                            g2.setColor(Color.WHITE);
+                            g2.setFont(new Font("Segoe UI", Font.BOLD, 36));
+                            String iniciales = obtenerIniciales(usuario.obtNombre());
+                            FontMetrics fm = g2.getFontMetrics();
+                            int x = (getWidth() - fm.stringWidth(iniciales)) / 2;
+                            int y = (getHeight() + fm.getAscent()) / 2;
+                            g2.drawString(iniciales, x, y);
+                        }
                     }
                 } catch (Exception e) {
                     // Si hay error, mostrar iniciales
@@ -231,6 +244,20 @@ public class PrincipalUserUI extends JFrame {
         return welcomePanel;
     }
     
+    private String obtenerNombreDesdeRepositorio(String cedula) {
+        try {
+            RepoSecretaria repo = new RepoSecretaria();
+            Usuario usuarioRepo = repo.buscarRegistroUCV(cedula);
+            if (usuarioRepo != null && usuarioRepo.obtNombre() != null && !usuarioRepo.obtNombre().trim().isEmpty()) {
+                return usuarioRepo.obtNombre();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al obtener nombre desde repositorio: " + e.getMessage());
+        }
+        // Si no se encuentra en el repositorio, usar el nombre actual
+        return usuario.obtNombre() != null ? usuario.obtNombre() : "Usuario";
+    }
+    
     private String obtenerIniciales(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
             return "U";
@@ -248,5 +275,5 @@ public class PrincipalUserUI extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new PrincipalUserUI().setVisible(true));
-    };
+    }
 }

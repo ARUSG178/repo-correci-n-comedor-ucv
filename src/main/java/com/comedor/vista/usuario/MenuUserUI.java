@@ -68,8 +68,6 @@ public class MenuUserUI extends JFrame {
     private String descAlmuerzo, infoNutricionalAlmuerzo;
 
     private double ccbActual = 0.0;
-    private double precioCalculadoDesayuno = 0.0;
-    private double precioCalculadoAlmuerzo = 0.0;
 
     // Constructor por defecto para pruebas
     public MenuUserUI() {
@@ -254,29 +252,7 @@ public class MenuUserUI extends JFrame {
         }
     }
 
-    private double calcularPrecioParaUsuario(String precioConfigurado) {
-        // Estudiantes: 20% del CCB
-        // Empleados: 50% del CCB 
-        // Profesores/Admin: 100% CCB
-        
-        double base = 5.00; // Valor por defecto
-
-        // 1. Intentar usar el precio configurado en el menú como base
-        try {
-            String pLimpio = precioConfigurado.replace("$", "").replace(" ", "").replace(",", ".").trim();
-            base = Double.parseDouble(pLimpio);
-        } catch (Exception e) {
-            // Si falla el parseo, se mantiene 5.00 o el valor anterior
-        }
-
-        // 2. Si existe un CCB calculado, este tiene prioridad como base del costo
-        if (ccbActual > 0) {
-            base = ccbActual;
-        }
-        
-        return base * new ServicioMenu().factorParaUsuario(usuario);
-    }
-
+   
     // Configura las propiedades de la ventana del menú
     private void configurarVentana() {
         setTitle("Menú del Comedor - SAGC UCV");
@@ -314,9 +290,13 @@ public class MenuUserUI extends JFrame {
 
         // AÑADIR LA BARRA LATERAL MEJORADA
         sideBarNavigation = new SideBarNavigation(usuario, () -> {
-            // Ir al panel principal real (evita tener dos "menús principales")
+            // Ir al panel principal según el tipo de usuario
             SwingUtilities.invokeLater(() -> {
-                new PrincipalUserUI(usuario).setVisible(true);
+                if (usuario instanceof com.comedor.modelo.entidades.Administrador) {
+                    new com.comedor.vista.admin.PrincipalAdminUI(usuario).setVisible(true);
+                } else {
+                    new PrincipalUserUI(usuario).setVisible(true);
+                }
                 MenuUserUI.this.dispose();
             });
         });

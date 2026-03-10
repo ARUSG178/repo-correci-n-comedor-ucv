@@ -71,7 +71,15 @@ public class GestionUsuariosUI extends JFrame {
         backgroundPanel.add(headerPanel, BorderLayout.NORTH);
 
         SideBarNavigation sideBar = new SideBarNavigation(usuarioAdmin, () -> {
-            dispose();
+            try {
+                new PrincipalAdminUI(usuarioAdmin).setVisible(true);
+                dispose();
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                    "Error al volver al panel principal:\n" + e.getMessage(),
+                    "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+            }
         });
         backgroundPanel.add(sideBar, BorderLayout.WEST);
 
@@ -166,5 +174,10 @@ public class GestionUsuariosUI extends JFrame {
             Logger.error("Error guardando usuarios", e);
             JOptionPane.showMessageDialog(this, "No se pudo guardar.", "Gestión de usuarios", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    public static void main(String[] args) {
+        com.comedor.modelo.entidades.Usuario adminDummy = new com.comedor.modelo.entidades.Administrador("0", "admin", "0");
+        SwingUtilities.invokeLater(() -> new GestionUsuariosUI(adminDummy).setVisible(true));
     }
 }
