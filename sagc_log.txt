@@ -79,3 +79,31 @@
 [2026-03-02 20:28:18] INFO: Inicio de sesi髇 exitoso para c閐ula: 29617475
 [2026-03-02 20:32:55] INFO: Inicio de sesi髇 exitoso para c閐ula: 29617475
 [2026-03-02 20:34:21] INFO: Inicio de sesi髇 exitoso para c閐ula: 29617475
+[2026-03-09 13:55:51] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 13:56:25] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000001
+[2026-03-09 13:56:54] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 13:59:35] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:00:05] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000001
+[2026-03-09 14:00:21] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:00:55] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:01:34] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:08:37] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:12:09] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:13:09] INFO: Costo agregado: Costos Fijos Mensuales (FIJO)
+[2026-03-09 14:13:09] INFO: Costo agregado: Costos Variables Mensuales (VARIABLE)
+[2026-03-09 14:13:09] INFO: Producci贸n estimada de bandejas para 2026-03: 4
+[2026-03-09 14:13:09] INFO: Merma registrada para 2026-03: 12.0%
+[2026-03-09 14:18:24] INFO: Costo agregado: Costos Fijos Mensuales (FIJO)
+[2026-03-09 14:18:24] INFO: Costo agregado: Costos Variables Mensuales (VARIABLE)
+[2026-03-09 14:18:24] INFO: Producci贸n estimada de bandejas para 2026-03: 3
+[2026-03-09 14:18:24] INFO: Merma registrada para 2026-03: 4.0%
+[2026-03-09 14:18:40] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:18:51] INFO: Costo agregado: Costos Fijos Mensuales (FIJO)
+[2026-03-09 14:18:51] INFO: Costo agregado: Costos Variables Mensuales (VARIABLE)
+[2026-03-09 14:18:51] INFO: Producci贸n estimada de bandejas para 2026-03: 4
+[2026-03-09 14:18:51] INFO: Merma registrada para 2026-03: 12.0%
+[2026-03-09 14:47:40] INFO: Inicio de sesi贸n exitoso para c茅dula: 10000004
+[2026-03-09 14:47:48] INFO: Costo agregado: Costos Fijos Mensuales (FIJO)
+[2026-03-09 14:47:48] INFO: Costo agregado: Costos Variables Mensuales (VARIABLE)
+[2026-03-09 14:47:48] INFO: Producci贸n estimada de bandejas para 2026-03: 3
+[2026-03-09 14:47:48] INFO: Merma registrada para 2026-03: 4.0%

@@ -341,14 +341,22 @@ public class SideBarNavigation extends JPanel {
         sideBar.add(Box.createRigidArea(new Dimension(0, 20))); // Espaciado entre botones
         
         sideBar.add(crearBotonNavegacion("\ud83d\udc64", "Gestionar Usuarios", () -> {
-            new GestionUsuariosUI(usuario).setVisible(true);
-            SwingUtilities.getWindowAncestor(this).dispose();
+            try {
+                new GestionUsuariosUI(usuario).setVisible(true);
+                SwingUtilities.getWindowAncestor(this).dispose();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al abrir Gestion de Usuarios:\n" + e.getMessage(), "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+            }
         }));
         sideBar.add(Box.createRigidArea(new Dimension(0, 20))); // Espaciado entre botones
         
         sideBar.add(crearBotonNavegacion("\ud83d\udcdd", "Editor de Menú", () -> {
-            new VerMenuAdminUI(usuario).setVisible(true);
-            SwingUtilities.getWindowAncestor(this).dispose();
+            try {
+                new VerMenuAdminUI(usuario).setVisible(true);
+                SwingUtilities.getWindowAncestor(this).dispose();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al abrir Editor de Menú:\n" + e.getMessage(), "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+            }
         }));
         sideBar.add(Box.createRigidArea(new Dimension(0, 20))); // Espaciado entre botones
         
@@ -372,8 +380,12 @@ public class SideBarNavigation extends JPanel {
         sideBar.add(Box.createRigidArea(new Dimension(0, 20))); // Espaciado entre botones
         
         sideBar.add(crearBotonNavegacion("\ud83c\udf7d\ufe0f", "Vista Previa Menú", () -> {
-            new MenuUserUI(usuario).setVisible(true);
-            SwingUtilities.getWindowAncestor(this).dispose();
+            try {
+                new MenuUserUI(usuario).setVisible(true);
+                SwingUtilities.getWindowAncestor(this).dispose();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al abrir Vista Previa de Menú:\n" + e.getMessage(), "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+            }
         }));
     }
 

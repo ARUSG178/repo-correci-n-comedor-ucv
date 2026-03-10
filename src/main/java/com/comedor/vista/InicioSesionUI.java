@@ -301,13 +301,23 @@ public class InicioSesionUI extends JFrame {
 
             if (usuarioReal instanceof Administrador) {
                 SwingUtilities.invokeLater(() -> {
-                    this.dispose();
-                    new PrincipalAdminUI(usuarioReal).setVisible(true);
+                    try {
+                        new PrincipalAdminUI(usuarioReal).setVisible(true);
+                        this.dispose();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(this, "Error al iniciar el panel de Administrador:\n" + e.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
+                    }
                 });
             } else {
                 SwingUtilities.invokeLater(() -> {
-                    this.dispose();
-                    new PrincipalUserUI(usuarioReal).setVisible(true);
+                    try {
+                        new PrincipalUserUI(usuarioReal).setVisible(true);
+                        this.dispose();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(this, "Error al iniciar el panel de Usuario:\n" + e.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
+                    }
                 });
             }
             

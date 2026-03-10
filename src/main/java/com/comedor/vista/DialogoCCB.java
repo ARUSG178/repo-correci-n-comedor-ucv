@@ -81,7 +81,7 @@ public class DialogoCCB extends JDialog {
 
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 5, 0);
-        mainPanel.add(crearLabel("% Tarifa Estudiante (Ej: 25):"), gbc);
+        mainPanel.add(crearLabel("% Tarifa Estudiante (Rango: 20-30):"), gbc);
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 15, 0);
         txtPctEstudiante = crearInput();
@@ -89,7 +89,7 @@ public class DialogoCCB extends JDialog {
 
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 5, 0);
-        mainPanel.add(crearLabel("% Tarifa Empleado (Ej: 100):"), gbc);
+        mainPanel.add(crearLabel("% Tarifa Empleado (Rango: 90-110):"), gbc);
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 15, 0);
         txtPctEmpleado = crearInput();
@@ -97,7 +97,7 @@ public class DialogoCCB extends JDialog {
 
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 5, 0);
-        mainPanel.add(crearLabel("% Tarifa Profesor (Ej: 80):"), gbc);
+        mainPanel.add(crearLabel("% Tarifa Profesor (Rango: 70-90):"), gbc);
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 20, 0);
         txtPctProfesor = crearInput();
@@ -159,9 +159,9 @@ public class DialogoCCB extends JDialog {
             // Sin archivo aún
         }
 
-        txtPctEstudiante.setText(props.getProperty("tarifa_pct_estudiante", "20"));
+        txtPctEstudiante.setText(props.getProperty("tarifa_pct_estudiante", "25"));
         txtPctEmpleado.setText(props.getProperty("tarifa_pct_empleado", "100"));
-        txtPctProfesor.setText(props.getProperty("tarifa_pct_profesor", "100"));
+        txtPctProfesor.setText(props.getProperty("tarifa_pct_profesor", "80"));
     }
 
     private void calcular() {
@@ -175,6 +175,21 @@ public class DialogoCCB extends JDialog {
             double pctEmpleado = Double.parseDouble(txtPctEmpleado.getText());
             double pctProfesor = Double.parseDouble(txtPctProfesor.getText());
 
+            // --- VALIDACIÓN DE RANGOS DE TARIFA ---
+            if (pctEstudiante < 20 || pctEstudiante > 30) {
+                JOptionPane.showMessageDialog(this, "La tarifa de Estudiante debe estar entre 20% y 30%.", "Rango Inválido", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (pctProfesor < 70 || pctProfesor > 90) {
+                JOptionPane.showMessageDialog(this, "La tarifa de Profesor debe estar entre 70% y 90%.", "Rango Inválido", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (pctEmpleado < 90 || pctEmpleado > 110) {
+                JOptionPane.showMessageDialog(this, "La tarifa de Empleado debe estar entre 90% y 110%.", "Rango Inválido", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // --- VALIDACIÓN DE OTROS VALORES ---
             if (fijos < 0 || variables < 0) {
                 JOptionPane.showMessageDialog(this, "Los costos no pueden ser negativos.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -193,44 +208,43 @@ public class DialogoCCB extends JDialog {
             // Convertimos el entero (ej: 10) a decimal (0.10) para el cálculo
             double ccb = servicioCosto.calcularRegistrarCCBCompleto(fijos, variables, produccion, porcentajeMerma / 100.0);
             lblResultado.setText(String.format("CCB: $%.2f", ccb));
-            guardarCCBEnConfig(ccb);
-            guardarTarifasEnConfig(pctEstudiante, pctEmpleado, pctProfesor);
-            JOptionPane.showMessageDialog(this, "Cálculo realizado y guardado exitosamente.\nNuevo Costo por Bandeja: $" + String.format("%.2f", ccb));
+            
+            // Guardar toda la configuración de una vez para evitar errores
+            guardarConfiguracionCompleta(ccb, pctEstudiante, pctEmpleado, pctProfesor);
+            
+            double precioEstudiante = ccb * (pctEstudiante / 100.0);
+            double precioEmpleado = ccb * (pctEmpleado / 100.0);
+            double precioProfesor = ccb * (pctProfesor / 100.0);
+
+            String mensaje = String.format("Cálculo y tarifas guardados exitosamente.\n\n" +
+                    "Nuevo Costo por Bandeja (CCB): $%.2f\n\n" +
+                    "Precios Finales:\n" +
+                    "- Estudiante: $%.2f\n" +
+                    "- Empleado: $%.2f\n" +
+                    "- Profesor: $%.2f", 
+                    ccb, precioEstudiante, precioEmpleado, precioProfesor);
+
+            JOptionPane.showMessageDialog(this, mensaje);
             
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Por favor ingrese valores numéricos válidos.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void guardarCCBEnConfig(double ccb) {
+    private void guardarConfiguracionCompleta(double ccb, double pctEstudiante, double pctEmpleado, double pctProfesor) {
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream("menu_config.properties")) {
             props.load(in);
         } catch (Exception e) {
             // Si no existe, se crea uno nuevo
         }
-        
+
         try (FileOutputStream out = new FileOutputStream("menu_config.properties")) {
             props.setProperty("ccb_actual", String.valueOf(ccb));
-            props.store(out, "Actualizacion de Costos CCB");
-        } catch (Exception e) {
-            System.err.println("Error guardando CCB: " + e.getMessage());
-        }
-    }
-
-    private void guardarTarifasEnConfig(double pctEstudiante, double pctEmpleado, double pctProfesor) {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("menu_config.properties")) {
-            props.load(in);
-        } catch (Exception e) {
-            // Si no existe, se crea uno nuevo
-        }
-
-        try (FileOutputStream out = new FileOutputStream("menu_config.properties")) {
             props.setProperty("tarifa_pct_estudiante", String.valueOf(pctEstudiante));
             props.setProperty("tarifa_pct_empleado", String.valueOf(pctEmpleado));
             props.setProperty("tarifa_pct_profesor", String.valueOf(pctProfesor));
-            props.store(out, "Actualizacion de Tarifas");
+            props.store(out, "Actualizacion de Costos (CCB) y Tarifas");
         } catch (Exception e) {
             System.err.println("Error guardando tarifas: " + e.getMessage());
         }

@@ -174,7 +174,8 @@ public class PrincipalAdminUI extends JFrame {
 
         // --- SIDEBAR ---
         SideBarNavigation sideBar = new SideBarNavigation(usuario, () -> {
-            dispose();
+            // No hacer nada, ya estamos en el panel principal.
+            // Esto evita que la ventana se cierre al hacer clic en su propio botón.
         });
         backgroundPanel.add(sideBar, BorderLayout.WEST);
 

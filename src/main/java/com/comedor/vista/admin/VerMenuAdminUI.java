@@ -36,6 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
@@ -148,7 +149,15 @@ public class VerMenuAdminUI extends JFrame {
         backgroundPanel.add(headerPanel, BorderLayout.NORTH);
 
         SideBarNavigation sideBar = new SideBarNavigation(usuario, () -> {
-            dispose();
+            try {
+                new PrincipalAdminUI(usuario).setVisible(true);
+                dispose();
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                    "Error al volver al panel principal:\n" + e.getMessage(),
+                    "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+            }
         });
         backgroundPanel.add(sideBar, BorderLayout.WEST);
 

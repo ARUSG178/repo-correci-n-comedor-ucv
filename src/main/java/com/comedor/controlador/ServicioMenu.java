@@ -33,7 +33,7 @@ public class ServicioMenu {
         }
     }
 
-    private double factorParaUsuario(Usuario usuario) {
+    public double factorParaUsuario(Usuario usuario) {
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream("menu_config.properties")) {
             props.load(in);
@@ -294,7 +294,18 @@ public class ServicioMenu {
     private void cargarPlatilloEnMenu(Menu menu, Properties props, String prefijo) {
         String nombre = props.getProperty(prefijo + "_nombre");
         if (nombre != null && !nombre.isEmpty()) {
-            double precio = Double.parseDouble(props.getProperty(prefijo + "_precio", "0.0"));
+            String precioStr = props.getProperty(prefijo + "_precio", "0.0");
+            // Limpieza: Reemplazar comas por puntos y eliminar símbolos (como $)
+            precioStr = precioStr.replace(",", ".");
+            precioStr = precioStr.replaceAll("[^\\d.]", "");
+            
+            double precio = 0.0;
+            try {
+                if (!precioStr.isEmpty()) precio = Double.parseDouble(precioStr);
+            } catch (NumberFormatException e) {
+                Logger.warning("Error formato precio en config (" + prefijo + "): " + precioStr);
+            }
+            
             String imagen = props.getProperty(prefijo + "_imagen", "");
             String desc = props.getProperty(prefijo + "_descripcion", "");
             String nutri = props.getProperty(prefijo + "_nutricion", "");

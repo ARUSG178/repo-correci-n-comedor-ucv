@@ -1,5 +1,6 @@
 package com.comedor.vista.usuario;
 
+import com.comedor.controlador.ServicioMenu;
 import com.comedor.modelo.entidades.Estudiante;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.entidades.Empleado;
@@ -70,10 +71,6 @@ public class MenuUserUI extends JFrame {
     private double precioCalculadoDesayuno = 0.0;
     private double precioCalculadoAlmuerzo = 0.0;
 
-    private double factorPagoEstudiante = 0.20;
-    private double factorPagoEmpleado = 1.00;
-    private double factorPagoProfesor = 1.00;
-
     // Constructor por defecto para pruebas
     public MenuUserUI() {
         this(new Estudiante("00000000", "1234", "General", "UCV"));
@@ -104,17 +101,7 @@ public class MenuUserUI extends JFrame {
 
         double base = (ccbActual > 0) ? ccbActual : original;
 
-        double factor;
-        if (usuario instanceof Estudiante) {
-            factor = factorPagoEstudiante;
-        } else if (usuario instanceof Empleado) {
-            factor = factorPagoEmpleado;
-        } else if (usuario instanceof com.comedor.modelo.entidades.Profesor) {
-            factor = factorPagoProfesor;
-        } else {
-            factor = 1.00;
-        }
-
+        double factor = new ServicioMenu().factorParaUsuario(usuario);
         double finalCobro = base * factor;
         return new PrecioBreakdown(original, base, factor, finalCobro);
     }
@@ -262,26 +249,8 @@ public class MenuUserUI extends JFrame {
             String ccbStr = props.getProperty("ccb_actual", "0.0");
             ccbActual = Double.parseDouble(ccbStr);
 
-            factorPagoEstudiante = parseFactor(props.getProperty("tarifa_pct_estudiante"), 0.20);
-            factorPagoEmpleado = parseFactor(props.getProperty("tarifa_pct_empleado"), 1.00);
-            factorPagoProfesor = parseFactor(props.getProperty("tarifa_pct_profesor"), 1.00);
-            
-            // Calcular precios para ambos
-            precioCalculadoDesayuno = calcularPrecioParaUsuario(precioDesayuno);
-            precioCalculadoAlmuerzo = calcularPrecioParaUsuario(precioAlmuerzo);
         } catch (Exception e) {
             Logger.error("Error al cargar datos del platillo", e);
-        }
-    }
-
-    private double parseFactor(String pct, double fallback) {
-        if (pct == null || pct.trim().isEmpty()) {
-            return fallback;
-        }
-        try {
-            return Double.parseDouble(pct.trim()) / 100.0;
-        } catch (Exception e) {
-            return fallback;
         }
     }
 
@@ -305,18 +274,7 @@ public class MenuUserUI extends JFrame {
             base = ccbActual;
         }
         
-        double factor;
-        if (usuario instanceof Estudiante) {
-            factor = factorPagoEstudiante;
-        } else if (usuario instanceof Empleado) {
-            factor = factorPagoEmpleado;
-        } else if (usuario instanceof com.comedor.modelo.entidades.Profesor) {
-            factor = factorPagoProfesor;
-        } else {
-            factor = 1.00;
-        }
-
-        return base * factor;
+        return base * new ServicioMenu().factorParaUsuario(usuario);
     }
 
     // Configura las propiedades de la ventana del menú
@@ -395,8 +353,8 @@ public class MenuUserUI extends JFrame {
         JPanel filaPlatillos = new JPanel(new GridBagLayout());
         filaPlatillos.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        JPanel panelDesayuno = crearPlatilloPanel("Desayuno", rutaImagenDesayuno, nombreDesayuno, precioCalculadoDesayuno, descDesayuno, infoNutricionalDesayuno);
-        JPanel panelAlmuerzo = crearPlatilloPanel("Almuerzo", rutaImagenAlmuerzo, nombreAlmuerzo, precioCalculadoAlmuerzo, descAlmuerzo, infoNutricionalAlmuerzo);
+        JPanel panelDesayuno = crearPlatilloPanel("Desayuno", rutaImagenDesayuno, nombreDesayuno, descDesayuno, infoNutricionalDesayuno);
+        JPanel panelAlmuerzo = crearPlatilloPanel("Almuerzo", rutaImagenAlmuerzo, nombreAlmuerzo, descAlmuerzo, infoNutricionalAlmuerzo);
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 0, 100); // gap de 100px a la derecha
@@ -418,7 +376,7 @@ public class MenuUserUI extends JFrame {
     }
 
     // Crea un panel individual para mostrar un platillo del menú
-    private JPanel crearPlatilloPanel(String titulo, String rutaImagen, String nombre, double precioCalculado, String descripcion, String infoNutricional) {
+    private JPanel crearPlatilloPanel(String titulo, String rutaImagen, String nombre, String descripcion, String infoNutricional) {
         JPanel platilloPanel = new JPanel(new BorderLayout());
         platilloPanel.setOpaque(false);
 
