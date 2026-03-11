@@ -125,7 +125,7 @@ public class PrincipalAdminUI extends JFrame {
 
         // Mensaje personalizado con nombre del administrador
         String nombreCompleto = obtenerNombreDesdeRepositorio(usuario.obtCedula());
-        JLabel welcomeTitle = new JLabel("<html><div style='text-align: center; color: white;'>!Bienvenido, " + nombreCompleto + "</div></html>");
+        JLabel welcomeTitle = new JLabel("<html><div style='text-align: center; color: white;'>!Bienvenido, " + nombreCompleto + "!</div></html>");
         welcomeTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         
         JLabel welcomeMessage = new JLabel("<html><div style='text-align: center; color: #e0e0e0;'>" +
@@ -204,6 +204,11 @@ public class PrincipalAdminUI extends JFrame {
     }
 
     private String obtenerNombreDesdeRepositorio(String cedula) {
+        // Primero usar el nombre ya guardado en el usuario
+        if (usuario.obtNombre() != null && !usuario.obtNombre().trim().isEmpty()) {
+            return usuario.obtNombre();
+        }
+        // Solo si no hay nombre guardado, buscar en secretaria
         try {
             RepoSecretaria repo = new RepoSecretaria();
             Usuario usuarioRepo = repo.buscarRegistroUCV(cedula);
@@ -213,8 +218,8 @@ public class PrincipalAdminUI extends JFrame {
         } catch (Exception e) {
             System.err.println("Error al obtener nombre desde repositorio: " + e.getMessage());
         }
-        // Si no se encuentra en el repositorio, usar el nombre actual
-        return usuario.obtNombre() != null ? usuario.obtNombre() : "Administrador";
+        // Último recurso
+        return "Administrador";
     }
 
     private String obtenerIniciales(String nombre) {

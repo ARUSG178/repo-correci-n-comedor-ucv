@@ -151,7 +151,7 @@ public class PrincipalUserUI extends JFrame {
         
         // Mensaje personalizado con nombre del usuario
         String nombreCompleto = obtenerNombreDesdeRepositorio(usuario.obtCedula());
-        JLabel welcomeTitle = new JLabel("<html><div style='text-align: center;'>!Bienvenido, " + nombreCompleto + "</div></html>");
+        JLabel welcomeTitle = new JLabel("<html><div style='text-align: center;'>!Bienvenido, " + nombreCompleto + "!</div></html>");
         welcomeTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         welcomeTitle.setForeground(Color.WHITE);
         
@@ -245,6 +245,11 @@ public class PrincipalUserUI extends JFrame {
     }
     
     private String obtenerNombreDesdeRepositorio(String cedula) {
+        // Primero usar el nombre ya guardado en el usuario
+        if (usuario.obtNombre() != null && !usuario.obtNombre().trim().isEmpty()) {
+            return usuario.obtNombre();
+        }
+        // Solo si no hay nombre guardado, buscar en secretaria
         try {
             RepoSecretaria repo = new RepoSecretaria();
             Usuario usuarioRepo = repo.buscarRegistroUCV(cedula);
@@ -254,8 +259,8 @@ public class PrincipalUserUI extends JFrame {
         } catch (Exception e) {
             System.err.println("Error al obtener nombre desde repositorio: " + e.getMessage());
         }
-        // Si no se encuentra en el repositorio, usar el nombre actual
-        return usuario.obtNombre() != null ? usuario.obtNombre() : "Usuario";
+        // Último recurso
+        return "Usuario";
     }
     
     private String obtenerIniciales(String nombre) {
