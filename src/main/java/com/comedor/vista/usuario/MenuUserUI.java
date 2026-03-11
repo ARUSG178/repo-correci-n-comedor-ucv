@@ -403,6 +403,13 @@ public class MenuUserUI extends JFrame {
         imagenLabel.setMaximumSize(new Dimension(390, 390));
         setImagenEnLabel(imagenLabel, rutaImagen);
         imagenPanel.add(imagenLabel);
+        
+        // Asignar a variables de instancia para poder actualizarlas luego
+        if ("Desayuno".equalsIgnoreCase(titulo)) {
+            lblImagenDesayuno = imagenLabel;
+        } else if ("Almuerzo".equalsIgnoreCase(titulo)) {
+            lblImagenAlmuerzo = imagenLabel;
+        }
 
         // Info
         JPanel infoPanel = new JPanel();
@@ -418,6 +425,13 @@ public class MenuUserUI extends JFrame {
         lblDesc.setFont(UIConstants.FONT_BODY_NORMAL);
         lblDesc.setForeground(CARD_TEXT);
         wrapDesc.add(lblDesc);
+        
+        // Asignar a variables de instancia para poder actualizarlas luego
+        if ("Desayuno".equalsIgnoreCase(titulo)) {
+            lblDescDesayuno = lblDesc;
+        } else if ("Almuerzo".equalsIgnoreCase(titulo)) {
+            lblDescAlmuerzo = lblDesc;
+        }
 
         // Wrapper para centrar nutrición
         JPanel wrapNutri = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
@@ -426,6 +440,13 @@ public class MenuUserUI extends JFrame {
         lblNutri.setFont(UIConstants.FONT_BODY_NORMAL);
         lblNutri.setForeground(CARD_TEXT);
         wrapNutri.add(lblNutri);
+        
+        // Asignar a variables de instancia para poder actualizarlas luego
+        if ("Desayuno".equalsIgnoreCase(titulo)) {
+            lblNutriDesayuno = lblNutri;
+        } else if ("Almuerzo".equalsIgnoreCase(titulo)) {
+            lblNutriAlmuerzo = lblNutri;
+        }
 
         // Wrapper para centrar precio
         JPanel wrapPrecio = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
@@ -453,6 +474,7 @@ public class MenuUserUI extends JFrame {
             } else if ("Almuerzo".equalsIgnoreCase(titulo)) {
                 new SeleccionarTurnoUI(usuario, breakdown.finalCobro, "Almuerzo").setVisible(true);
             }
+            MenuUserUI.this.dispose();
         });
         wrapBoton.add(btnSeleccionar);
 

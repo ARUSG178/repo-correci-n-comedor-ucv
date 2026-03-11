@@ -1,7 +1,11 @@
 package com.comedor.vista.admin;
 
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.entidades.Estudiante;
+import com.comedor.modelo.entidades.EstudianteBecario;
+import com.comedor.modelo.entidades.EstudianteExonerado;
 import com.comedor.modelo.persistencia.RepoUsuarios;
+import com.comedor.modelo.persistencia.RepoSecretaria;
 import com.comedor.utilidades.Logger;
 import com.comedor.vista.components.SideBarNavigation;
 
@@ -112,6 +116,22 @@ public class GestionUsuariosUI extends JFrame {
         btnToggleEstado.setOpaque(true);
         btnToggleEstado.setContentAreaFilled(true);
 
+        JButton btnBecario = new JButton("Agregar Becario");
+        btnBecario.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btnBecario.setBackground(new Color(0, 100, 200));
+        btnBecario.setForeground(Color.WHITE);
+        btnBecario.setFocusPainted(false);
+        btnBecario.setOpaque(true);
+        btnBecario.setContentAreaFilled(true);
+
+        JButton btnExonerado = new JButton("Agregar Exonerado");
+        btnExonerado.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btnExonerado.setBackground(new Color(100, 50, 150));
+        btnExonerado.setForeground(Color.WHITE);
+        btnExonerado.setFocusPainted(false);
+        btnExonerado.setOpaque(true);
+        btnExonerado.setContentAreaFilled(true);
+
         JButton btnGuardar = new JButton("Guardar Cambios");
         btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 16));
         btnGuardar.setBackground(new Color(0, 100, 0));
@@ -123,10 +143,14 @@ public class GestionUsuariosUI extends JFrame {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         actions.setOpaque(false);
         actions.add(btnToggleEstado);
+        actions.add(btnBecario);
+        actions.add(btnExonerado);
         actions.add(btnGuardar);
         rightPanel.add(actions, BorderLayout.SOUTH);
 
         btnToggleEstado.addActionListener(e -> toggleEstadoSeleccionado());
+        btnBecario.addActionListener(e -> agregarBecario());
+        btnExonerado.addActionListener(e -> agregarExonerado());
         btnGuardar.addActionListener(e -> guardarCambios());
 
         backgroundPanel.add(rightPanel, BorderLayout.CENTER);
@@ -173,6 +197,270 @@ public class GestionUsuariosUI extends JFrame {
         } catch (IOException e) {
             Logger.error("Error guardando usuarios", e);
             JOptionPane.showMessageDialog(this, "No se pudo guardar.", "Gestión de usuarios", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void agregarBecario() {
+        // Pedir CI del estudiante
+        String cedula = JOptionPane.showInputDialog(this, 
+            "Ingrese la cédula del estudiante:", 
+            "Agregar Becario", JOptionPane.QUESTION_MESSAGE);
+        
+        if (cedula == null || cedula.trim().isEmpty()) {
+            return;
+        }
+        
+        cedula = cedula.trim();
+        
+        // VALIDAR: Buscar en Secretaría UCV primero
+        Usuario datosSecretaria = null;
+        try {
+            RepoSecretaria repoSecretaria = new RepoSecretaria();
+            datosSecretaria = repoSecretaria.buscarRegistroUCV(cedula);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error al consultar secretaría: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Si NO existe en secretaría, NO se crea
+        if (datosSecretaria == null) {
+            JOptionPane.showMessageDialog(this, 
+                "El estudiante con CI " + cedula + " no está registrado en la Secretaría UCV.\n" +
+                "No se puede agregar como becario.", 
+                "Estudiante No Encontrado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Validar que sea un estudiante (no empleado ni profesor)
+        if (!(datosSecretaria instanceof Estudiante)) {
+            JOptionPane.showMessageDialog(this, 
+                "El usuario con CI " + cedula + " no es un estudiante.\n" +
+                "Tipo encontrado: " + datosSecretaria.obtTipo(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Obtener datos de secretaría
+        String carrera = ((Estudiante) datosSecretaria).obtCarrera();
+        String facultad = ((Estudiante) datosSecretaria).obtFacultad();
+        String nombre = datosSecretaria.obtNombre();
+        
+        // Verificar si ya existe en el sistema de usuarios
+        Usuario usuarioExistente = null;
+        int indexExistente = -1;
+        for (int i = 0; i < usuarios.size(); i++) {
+            if (usuarios.get(i).obtCedula().equals(cedula)) {
+                usuarioExistente = usuarios.get(i);
+                indexExistente = i;
+                break;
+            }
+        }
+        
+        // Pedir % de descuento
+        String inputDescuento = JOptionPane.showInputDialog(this, 
+            "Estudiante: " + nombre + "\n" +
+            "Carrera: " + carrera + "\n\n" +
+            "Ingrese el % de descuento del becario:\n" +
+            "(Ejemplo: 95 = paga solo el 5% del precio)", 
+            "95");
+        
+        if (inputDescuento == null || inputDescuento.trim().isEmpty()) {
+            return;
+        }
+        
+        double porcentajeDescuento;
+        try {
+            porcentajeDescuento = Double.parseDouble(inputDescuento.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Porcentaje inválido.", 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Validación: % becario debe ser > 80% (mayor descuento que regular de 80%)
+        if (porcentajeDescuento <= 80.0) {
+            JOptionPane.showMessageDialog(this, 
+                "El % de descuento debe ser mayor al 80%\n" +
+                "(Un becario debe tener mayor beneficio que un estudiante regular\n" +
+                "que tiene 80% de descuento)", 
+                "Validación Fallida", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        if (porcentajeDescuento > 100.0) {
+            JOptionPane.showMessageDialog(this, 
+                "El % de descuento no puede ser mayor al 100%.", 
+                "Validación Fallida", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Crear becario con datos de secretaría
+        EstudianteBecario becario = new EstudianteBecario(
+            cedula, 
+            usuarioExistente != null ? usuarioExistente.obtContraseña() : cedula,
+            carrera,
+            facultad,
+            porcentajeDescuento
+        );
+        becario.setNombre(nombre);
+        
+        // Copiar datos si existía en usuarios
+        if (usuarioExistente != null) {
+            becario.setEstado(usuarioExistente.obtEstado());
+            becario.setSaldo(usuarioExistente.obtSaldo());
+            usuarios.set(indexExistente, becario);
+        } else {
+            becario.setEstado(true);
+            becario.setSaldo(0.0);
+            usuarios.add(becario);
+        }
+        
+        // Guardar en archivo usuarios.txt inmediatamente
+        RepoUsuarios repo = new RepoUsuarios();
+        try {
+            repo.guardarTodos(usuarios);
+        } catch (IOException e) {
+            Logger.error("Error guardando becario en usuarios.txt", e);
+            JOptionPane.showMessageDialog(this, 
+                "Error al guardar en archivo: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Guardar historial
+        guardarHistorial("BECARIO", cedula, porcentajeDescuento + "% descuento");
+        
+        // Recargar tabla desde archivo
+        cargarUsuarios();
+        
+        JOptionPane.showMessageDialog(this, 
+            "Estudiante becario agregado exitosamente.\n" +
+            "Nombre: " + nombre + "\n" +
+            "CI: " + cedula + "\n" +
+            "Descuento: " + porcentajeDescuento + "%", 
+            "Éxito", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void agregarExonerado() {
+        // Pedir CI del estudiante
+        String cedula = JOptionPane.showInputDialog(this, 
+            "Ingrese la cédula del estudiante:", 
+            "Agregar Exonerado", JOptionPane.QUESTION_MESSAGE);
+        
+        if (cedula == null || cedula.trim().isEmpty()) {
+            return;
+        }
+        
+        cedula = cedula.trim();
+        
+        // VALIDAR: Buscar en Secretaría UCV primero
+        Usuario datosSecretaria = null;
+        try {
+            RepoSecretaria repoSecretaria = new RepoSecretaria();
+            datosSecretaria = repoSecretaria.buscarRegistroUCV(cedula);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error al consultar secretaría: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Si NO existe en secretaría, NO se crea
+        if (datosSecretaria == null) {
+            JOptionPane.showMessageDialog(this, 
+                "El estudiante con CI " + cedula + " no está registrado en la Secretaría UCV.\n" +
+                "No se puede agregar como exonerado.", 
+                "Estudiante No Encontrado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Validar que sea un estudiante (no empleado ni profesor)
+        if (!(datosSecretaria instanceof Estudiante)) {
+            JOptionPane.showMessageDialog(this, 
+                "El usuario con CI " + cedula + " no es un estudiante.\n" +
+                "Tipo encontrado: " + datosSecretaria.obtTipo(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Obtener datos de secretaría
+        String carrera = ((Estudiante) datosSecretaria).obtCarrera();
+        String facultad = ((Estudiante) datosSecretaria).obtFacultad();
+        String nombre = datosSecretaria.obtNombre();
+        
+        // Verificar si ya existe en el sistema de usuarios
+        Usuario usuarioExistente = null;
+        int indexExistente = -1;
+        for (int i = 0; i < usuarios.size(); i++) {
+            if (usuarios.get(i).obtCedula().equals(cedula)) {
+                usuarioExistente = usuarios.get(i);
+                indexExistente = i;
+                break;
+            }
+        }
+        
+        // Crear exonerado con datos de secretaría
+        EstudianteExonerado exonerado = new EstudianteExonerado(
+            cedula,
+            usuarioExistente != null ? usuarioExistente.obtContraseña() : cedula,
+            carrera,
+            facultad
+        );
+        exonerado.setNombre(nombre);
+        
+        // Copiar datos si existía en usuarios
+        if (usuarioExistente != null) {
+            exonerado.setEstado(usuarioExistente.obtEstado());
+            exonerado.setSaldo(usuarioExistente.obtSaldo());
+            usuarios.set(indexExistente, exonerado);
+        } else {
+            exonerado.setEstado(true);
+            exonerado.setSaldo(0.0);
+            usuarios.add(exonerado);
+        }
+        
+        // Guardar en archivo usuarios.txt inmediatamente
+        RepoUsuarios repo = new RepoUsuarios();
+        try {
+            repo.guardarTodos(usuarios);
+        } catch (IOException e) {
+            Logger.error("Error guardando exonerado en usuarios.txt", e);
+            JOptionPane.showMessageDialog(this, 
+                "Error al guardar en archivo: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Guardar historial
+        guardarHistorial("EXONERADO", cedula, "100% descuento");
+        
+        // Recargar tabla desde archivo
+        cargarUsuarios();
+        
+        JOptionPane.showMessageDialog(this, 
+            "Estudiante exonerado agregado exitosamente.\n" +
+            "Nombre: " + nombre + "\n" +
+            "CI: " + cedula + "\n" +
+            "Descuento: 100% (No paga)", 
+            "Éxito", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void guardarHistorial(String tipoOperacion, String cedula, String detalle) {
+        try {
+            java.io.FileWriter fw = new java.io.FileWriter("historial_cambios_admin.txt", true);
+            java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            String admin = usuarioAdmin != null ? usuarioAdmin.obtCedula() : "Sistema";
+            bw.write(String.format("[%s] Admin: %s | Operación: %s | CI: %s | Detalle: %s",
+                now.toString(), admin, tipoOperacion, cedula, detalle));
+            bw.newLine();
+            bw.close();
+            Logger.info("Historial guardado: " + tipoOperacion + " para CI " + cedula);
+        } catch (IOException e) {
+            Logger.error("Error guardando historial", e);
         }
     }
 

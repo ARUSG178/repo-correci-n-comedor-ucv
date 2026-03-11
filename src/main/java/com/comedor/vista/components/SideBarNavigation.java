@@ -82,6 +82,7 @@ public class SideBarNavigation extends JPanel {
         
         setOpaque(false);
         setLayout(new BorderLayout());
+        // No establecer tamaño preferido - dejar que BorderLayout.WEST maneje la altura
         add(crearSideBarIzquierda(), BorderLayout.CENTER);
     }
 
@@ -104,7 +105,8 @@ public class SideBarNavigation extends JPanel {
         };
         sideBar.setLayout(new BoxLayout(sideBar, BoxLayout.Y_AXIS));
         sideBar.setOpaque(false);
-        sideBar.setPreferredSize(new Dimension(SIDEBAR_WIDTH_EXPANDED, 800)); // Altura fija
+        sideBar.setPreferredSize(new Dimension(SIDEBAR_WIDTH_EXPANDED, Integer.MAX_VALUE));
+        sideBar.setMaximumSize(new Dimension(SIDEBAR_WIDTH_EXPANDED, Integer.MAX_VALUE));
         sideBar.setBorder(new EmptyBorder(15, 15, 15, 15)); // Más padding general
 
         // --- Título/Logo mejorado (SIN BOTÓN HAMBURGUESA) ---
@@ -261,7 +263,8 @@ public class SideBarNavigation extends JPanel {
                 nextWidth = targetWidth;
             }
 
-            sideBar.setPreferredSize(new Dimension(nextWidth, 800)); // Altura fija
+            sideBar.setPreferredSize(new Dimension(nextWidth, Integer.MAX_VALUE));
+            sideBar.setMaximumSize(new Dimension(nextWidth, Integer.MAX_VALUE));
             sideBar.revalidate();
             sideBar.repaint();
 
@@ -272,7 +275,8 @@ public class SideBarNavigation extends JPanel {
             }
         });
 
-        sideBar.setPreferredSize(new Dimension(startWidth, 800)); // Altura fija
+        sideBar.setPreferredSize(new Dimension(startWidth, Integer.MAX_VALUE));
+        sideBar.setMaximumSize(new Dimension(startWidth, Integer.MAX_VALUE));
         sidebarTimer.start();
     }
 
@@ -292,7 +296,8 @@ public class SideBarNavigation extends JPanel {
         }
 
         int width = showText ? SIDEBAR_WIDTH_EXPANDED : SIDEBAR_WIDTH_COLLAPSED;
-        sideBar.setPreferredSize(new Dimension(width, 800)); // Altura fija
+        sideBar.setPreferredSize(new Dimension(width, Integer.MAX_VALUE));
+        sideBar.setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
         sideBar.revalidate();
         sideBar.repaint();
     }

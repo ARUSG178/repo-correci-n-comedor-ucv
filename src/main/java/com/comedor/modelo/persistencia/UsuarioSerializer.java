@@ -23,11 +23,11 @@ public class UsuarioSerializer {
         buffer.append(usuario.obtSaldo()).append(";");
         
         // Serializar campos específicos según el tipo
-        // Nota: EstudianteBecario y EstudianteExonerado heredan de Estudiante, se manejan igual
         if (usuario instanceof EstudianteBecario) {
             EstudianteBecario eb = (EstudianteBecario) usuario;
             buffer.append(eb.obtCarrera()).append(";");
-            buffer.append(eb.obtFacultad());
+            buffer.append(eb.obtFacultad()).append(";");
+            buffer.append(eb.obtPorcentajeDescuento()); // Guardar % descuento
         } else if (usuario instanceof EstudianteExonerado) {
             EstudianteExonerado ee = (EstudianteExonerado) usuario;
             buffer.append(ee.obtCarrera()).append(";");
@@ -84,7 +84,15 @@ public class UsuarioSerializer {
                 if (datos.length >= 9) {
                     String carrera = datos[7].trim();
                     String facultad = datos[8].trim();
-                    usuario = new EstudianteBecario(cedula, contraseña, carrera, facultad);
+                    double porcentajeDescuento = 95.0; // Valor por defecto
+                    if (datos.length >= 10) {
+                        try {
+                            porcentajeDescuento = Double.parseDouble(datos[9].trim());
+                        } catch (NumberFormatException e) {
+                            porcentajeDescuento = 95.0;
+                        }
+                    }
+                    usuario = new EstudianteBecario(cedula, contraseña, carrera, facultad, porcentajeDescuento);
                 }
                 break;
             case "EstudianteExonerado":

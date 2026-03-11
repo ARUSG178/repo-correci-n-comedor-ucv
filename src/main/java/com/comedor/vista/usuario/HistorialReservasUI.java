@@ -1,6 +1,8 @@
 package com.comedor.vista.usuario;
 
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.entidades.Reserva;
+import com.comedor.modelo.persistencia.RepoReservas;
 import com.comedor.vista.components.SideBarNavigation;
 import com.comedor.vista.utils.UIConstants;
 
@@ -11,7 +13,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class HistorialReservasUI extends JFrame {
@@ -94,12 +95,22 @@ public class HistorialReservasUI extends JFrame {
         scrollPanel.setOpaque(false);
         scrollPanel.setBorder(UIConstants.spacing(UIConstants.SPACING_LG));
 
-        // Datos dummy (reemplazar con servicio real)
-        List<Reserva> reservas = obtenerReservasDummy();
+        // Obtener reservas reales desde el repositorio
+        List<Reserva> reservas = RepoReservas.obtenerReservasPorUsuario(usuario);
 
-        for (Reserva r : reservas) {
-            scrollPanel.add(crearTarjetaReserva(r));
-            scrollPanel.add(Box.createVerticalStrut(UIConstants.SPACING_MD));
+        if (reservas.isEmpty()) {
+            // Mostrar mensaje cuando no hay reservas
+            JLabel lblEmpty = new JLabel("No tienes reservas registradas", SwingConstants.CENTER);
+            lblEmpty.setFont(UIConstants.FONT_BODY_NORMAL);
+            lblEmpty.setForeground(new Color(200, 200, 200));
+            scrollPanel.add(Box.createVerticalGlue());
+            scrollPanel.add(lblEmpty);
+            scrollPanel.add(Box.createVerticalGlue());
+        } else {
+            for (Reserva r : reservas) {
+                scrollPanel.add(crearTarjetaReserva(r));
+                scrollPanel.add(Box.createVerticalStrut(UIConstants.SPACING_MD));
+            }
         }
 
         JScrollPane scroll = new JScrollPane(scrollPanel);
@@ -134,21 +145,21 @@ public class HistorialReservasUI extends JFrame {
         card.setBorder(UIConstants.CARD_PADDING);
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
 
-        JLabel lblFecha = new JLabel(r.fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), SwingConstants.LEFT);
+        JLabel lblFecha = new JLabel(r.obtHorarioReservado().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), SwingConstants.LEFT);
         lblFecha.setFont(UIConstants.FONT_CARD_SUBTITLE);
         lblFecha.setForeground(Color.WHITE);
 
-        JLabel lblPlatillo = new JLabel(r.platillo, SwingConstants.LEFT);
+        JLabel lblPlatillo = new JLabel("Reserva #" + r.obtClaveAcceso(), SwingConstants.LEFT);
         lblPlatillo.setFont(UIConstants.FONT_BODY_NORMAL);
         lblPlatillo.setForeground(new Color(200, 200, 255));
 
-        JLabel lblMonto = new JLabel("Monto: $" + String.format("%.2f", r.monto), SwingConstants.LEFT);
+        JLabel lblMonto = new JLabel("Fecha: " + r.obtHorarioReservado().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), SwingConstants.LEFT);
         lblMonto.setFont(UIConstants.FONT_CARD_SUBTITLE);
         lblMonto.setForeground(new Color(255, 215, 0));
 
-        JLabel lblEstado = new JLabel("Estado: " + r.estado, SwingConstants.LEFT);
+        JLabel lblEstado = new JLabel("Estado: " + r.obtEstado(), SwingConstants.LEFT);
         lblEstado.setFont(UIConstants.FONT_BODY_SMALL);
-        lblEstado.setForeground(r.estado.equalsIgnoreCase("Completado") ? new Color(100, 255, 100) : new Color(255, 150, 150));
+        lblEstado.setForeground(r.obtEstado().equalsIgnoreCase("Completado") ? new Color(100, 255, 100) : new Color(255, 150, 150));
 
         card.add(lblFecha);
         card.add(Box.createVerticalStrut(UIConstants.SPACING_XS));
@@ -159,30 +170,6 @@ public class HistorialReservasUI extends JFrame {
         card.add(lblEstado);
 
         return card;
-    }
-
-    private List<Reserva> obtenerReservasDummy() {
-        List<Reserva> lista = new ArrayList<>();
-        lista.add(new Reserva("Desayuno Especial", 12.50, "Completado"));
-        lista.add(new Reserva("Almuerzo Ejecutivo", 18.75, "Completado"));
-        lista.add(new Reserva("Desayuno Ligero", 8.00, "Cancelado"));
-        lista.add(new Reserva("Almuerzo del Día", 15.30, "Completado"));
-        lista.add(new Reserva("Desayuno Continental", 22.00, "Completado"));
-        return lista;
-    }
-
-    private static class Reserva {
-        String platillo;
-        double monto;
-        String estado;
-        java.time.LocalDateTime fecha;
-
-        Reserva(String platillo, double monto, String estado) {
-            this.platillo = platillo;
-            this.monto = monto;
-            this.estado = estado;
-            this.fecha = java.time.LocalDateTime.now().minusDays((int)(Math.random() * 30));
-        }
     }
 
     public static void main(String[] args) {

@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.comedor.modelo.entidades.Empleado;
 import com.comedor.modelo.entidades.Estudiante;
+import com.comedor.modelo.entidades.EstudianteBecario;
+import com.comedor.modelo.entidades.EstudianteExonerado;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.entidades.Profesor;
 import com.comedor.util.ServicioUtil;
@@ -48,6 +50,16 @@ public class RepoSecretaria implements IRepositorioSecretaria {
                     String depto = datos[3].trim();
                     String codigo = datos[4].trim();
                     usuario = new Profesor(cedula, "", depto, codigo);
+                }
+                else if (tipo.equalsIgnoreCase("EstudianteBecario") && datos.length >= 5) {
+                    String carrera = datos[3].trim();
+                    String facultad = datos[4].trim();
+                    usuario = new EstudianteBecario(cedula, "", carrera, facultad, 95.0);
+                }
+                else if (tipo.equalsIgnoreCase("EstudianteExonerado") && datos.length >= 5) {
+                    String carrera = datos[3].trim();
+                    String facultad = datos[4].trim();
+                    usuario = new EstudianteExonerado(cedula, "", carrera, facultad);
                 }
 
                 if (usuario != null) {

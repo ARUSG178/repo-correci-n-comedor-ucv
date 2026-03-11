@@ -1,5 +1,6 @@
 package com.comedor.vista.usuario;
 
+import com.comedor.ReconocimientoFacialUI;
 import com.comedor.modelo.entidades.Usuario;
 
 import javax.swing.*;

@@ -9,7 +9,6 @@ import java.awt.event.MouseEvent;
 
 /**
  * Listener para el botón de volver al menú principal
- * Cumple con SRP: Responsabilidad única de manejar la navegación de regreso
  */
 public class VolverMenuListener extends MouseAdapter {
     private final Usuario usuario;

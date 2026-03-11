@@ -1,6 +1,7 @@
 package com.comedor.vista.listeners;
 
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.persistencia.RepoReservas;
 import com.comedor.utilidades.Logger;
 
 import java.awt.event.ActionEvent;
@@ -14,7 +15,6 @@ import java.io.FileOutputStream;
 
 /**
  * Listener para procesar la selección de turno y redirigir a verificación
- * Cumple con SRP: Responsabilidad única de manejar la lógica de selección de turno
  */
 public class SeleccionarTurnoListener implements ActionListener {
     private final Usuario usuario;
@@ -54,6 +54,14 @@ public class SeleccionarTurnoListener implements ActionListener {
             // Combinar con la fecha de hoy
             LocalDateTime fechaReserva = LocalDateTime.of(LocalDate.now(), horaInicio);
             
+            // Verificar si ya existe una reserva del mismo tipo (desayuno/almuerzo) para hoy
+            if (RepoReservas.existeReservaDelMismoTipo(usuario, fechaReserva)) {
+                JOptionPane.showMessageDialog(parentFrame, 
+                    "Ya tienes una reserva para este turno hoy.\nNo puedes hacer más de una reserva del mismo tipo por día.", 
+                    "Reserva Duplicada", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
             // Guardar datos para el módulo externo
             Properties props = new Properties();
             props.setProperty("cedula", usuario.obtCedula());
@@ -67,13 +75,11 @@ public class SeleccionarTurnoListener implements ActionListener {
 
             Logger.info("Turno seleccionado: " + turnoSeleccionado + " para usuario " + usuario.obtCedula());
 
-            JOptionPane.showMessageDialog(parentFrame, 
-                "Turno pre-seleccionado.\nPor favor, ejecute el módulo de verificación biométrica para completar el pago.", 
-                "Paso Siguiente", 
-                JOptionPane.INFORMATION_MESSAGE);
+            // Abrir directamente ReconocimientoFacialUI
+            SwingUtilities.invokeLater(() -> {
+                new com.comedor.ReconocimientoFacialUI(usuario, costoPlatillo, fechaReserva).setVisible(true);
+            });
             
-            // Volver a la pantalla principal del usuario
-            new com.comedor.vista.usuario.PrincipalUserUI(usuario).setVisible(true);
             parentFrame.dispose();
         } catch (Exception ex) {
             Logger.error("Error al procesar el turno", ex);

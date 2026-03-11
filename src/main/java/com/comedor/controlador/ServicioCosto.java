@@ -129,31 +129,42 @@ public class ServicioCosto {
         // VALIDACIÓN DE TIPO DE USUARIO PARA SALDO PANA
         if (esSaldoPana) {
             validarSaldoPana(usuario, cedulaDestino);
+            validarSaldoSuficiente(usuario, monto); // Validar que tiene saldo suficiente
         }
 
         String destino = esSaldoPana ? cedulaDestino.trim() : usuario.obtCedula();
 
         RepoUsuarios repo = new RepoUsuarios();
         List<Usuario> usuarios = repo.listarUsuarios();
-        boolean encontrado = false;
+        boolean encontradoDestino = false;
+        boolean saldoOrigenActualizado = !esSaldoPana; // Si no es saldo pana, no hay que actualizar origen
 
         for (Usuario u : usuarios) {
+            // Actualizar saldo del usuario destino
             if (u.obtCedula().equals(destino)) {
-                double nuevoSaldo = u.obtSaldo() + monto;
-                u.setSaldo(nuevoSaldo);
-                if (usuario != null && usuario.obtCedula().equals(destino)) {
-                    usuario.setSaldo(nuevoSaldo); // Actualizar el objeto en memoria de la sesión actual
-                }
-                encontrado = true;
-                break;
+                double nuevoSaldoDestino = u.obtSaldo() + monto;
+                u.setSaldo(nuevoSaldoDestino);
+                encontradoDestino = true;
+            }
+            
+            // Si es Saldo Pana, descontar saldo del usuario origen
+            if (esSaldoPana && u.obtCedula().equals(usuario.obtCedula())) {
+                double nuevoSaldoOrigen = u.obtSaldo() - monto;
+                u.setSaldo(nuevoSaldoOrigen);
+                usuario.setSaldo(nuevoSaldoOrigen); // Actualizar objeto en memoria
+                saldoOrigenActualizado = true;
             }
         }
 
-        if (encontrado) {
-            repo.guardarTodos(usuarios);
-        } else {
-            throw new IOException("No se encontró el usuario en la base de datos para actualizar el saldo.");
+        if (!encontradoDestino) {
+            throw new IOException("No se encontró el usuario destino en la base de datos para actualizar el saldo.");
         }
+        
+        if (!saldoOrigenActualizado) {
+            throw new IOException("No se encontró el usuario origen en la base de datos para descontar el saldo.");
+        }
+
+        repo.guardarTodos(usuarios);
     }
     
     /**
@@ -163,6 +174,11 @@ public class ServicioCosto {
      * @throws IllegalArgumentException Si la validación falla
      */
     private void validarSaldoPana(Usuario usuarioOrigen, String cedulaDestino) throws Exception {
+        // 0. Verificar que no se recargue a sí mismo
+        if (usuarioOrigen.obtCedula().equals(cedulaDestino.trim())) {
+            throw new IllegalArgumentException("No puedes recargarte saldo a ti mismo usando Saldo Pana.");
+        }
+        
         // 1. El usuario origen debe ser algún tipo de estudiante
         if (!esEstudiante(usuarioOrigen)) {
             throw new IllegalArgumentException("Solo los estudiantes (regulares, becarios o exonerados) pueden usar Saldo Pana para recargar a otros comensales.");
@@ -195,5 +211,20 @@ public class ServicioCosto {
         return tipo.equals("Estudiante") || 
                tipo.equals("EstudianteBecario") || 
                tipo.equals("EstudianteExonerado");
+    }
+    
+    /**
+     * Valida que el usuario tenga saldo suficiente para realizar la transferencia.
+     * @param usuario Usuario que envía el saldo
+     * @param monto Monto a transferir
+     * @throws IllegalArgumentException Si no tiene saldo suficiente
+     */
+    private void validarSaldoSuficiente(Usuario usuario, double monto) {
+        if (usuario.obtSaldo() < monto) {
+            throw new IllegalArgumentException(
+                String.format("Saldo insuficiente. Tienes $%.2f pero necesitas $%.2f para esta transferencia.", 
+                    usuario.obtSaldo(), monto)
+            );
+        }
     }
 }

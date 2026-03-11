@@ -1,18 +1,19 @@
-package com.comedor.vista.usuario;
+package com.comedor;
 
 import com.comedor.controlador.ServicioBiometrico;
 import com.comedor.controlador.ServicioPago;
 import com.comedor.modelo.persistencia.RepoUsuarios;
 import com.comedor.modelo.entidades.Usuario;
+import com.comedor.modelo.entidades.Reserva;
+import com.comedor.modelo.persistencia.RepoReservas;
 import com.comedor.modelo.excepciones.BiometriaFallidaException;
+import com.comedor.vista.usuario.HistorialReservasUI;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -97,19 +98,6 @@ public class ReconocimientoFacialUI extends JFrame {
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitulo.setForeground(Color.WHITE);
         headerPanel.add(lblTitulo, BorderLayout.CENTER);
-        
-        JLabel btnBack = new JLabel("  < Volver");
-        btnBack.setForeground(Color.WHITE);
-        btnBack.setFont(new Font("Segoe UI", Font.BOLD, 20)); // Aumentado de 14 a 20
-        btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnBack.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // Al ser un módulo separado, simplemente se cierra.
-                dispose();
-            }
-        });
-        headerPanel.add(btnBack, BorderLayout.WEST);
 
         // Centro
         JPanel centerPanel = new JPanel(new GridBagLayout());
@@ -225,6 +213,10 @@ public class ReconocimientoFacialUI extends JFrame {
             // 2. Delegar cobro
             ServicioPago sPago = new ServicioPago();
             sPago.procesarCobro(usuario, costoPlatillo);
+
+            // 3. Guardar la reserva
+            Reserva nuevaReserva = new Reserva(usuario, fechaReserva, "Completado");
+            RepoReservas.guardarReserva(nuevaReserva);
 
             // 3. Actualizar historial de reservas
             try {
