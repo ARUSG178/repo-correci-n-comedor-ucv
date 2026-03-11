@@ -40,6 +40,7 @@ import javax.imageio.ImageIO;
 
 import com.comedor.controlador.ServicioIS;
 import com.comedor.controlador.ServicioRegistro;
+import com.comedor.controlador.ServicioFactory;
 import com.comedor.modelo.entidades.Administrador;
 import com.comedor.modelo.entidades.Estudiante;
 import com.comedor.modelo.entidades.Usuario;
@@ -286,7 +287,7 @@ public class InicioSesionUI extends JFrame {
             return;
         }
 
-        ServicioIS servicio = new ServicioIS();
+        ServicioIS servicio = ServicioFactory.getInstance().crearServicioIS();
         
         try {
             // Creamos un usuario genérico (Estudiante) solo para transportar las credenciales
@@ -346,7 +347,7 @@ public class InicioSesionUI extends JFrame {
             return;
         }
 
-        ServicioRegistro servicio = new ServicioRegistro();
+        ServicioRegistro servicio = ServicioFactory.getInstance().crearServicioRegistro();
         try {
             servicio.registrarUsuario(cedula, clave, codigo);
             JOptionPane.showMessageDialog(this,

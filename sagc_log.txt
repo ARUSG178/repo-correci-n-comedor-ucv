@@ -112,3 +112,19 @@
 [2026-03-10 18:14:33] INFO: Inicio de sesión exitoso para cédula: 10000004
 [2026-03-10 18:17:18] INFO: Inicio de sesión exitoso para cédula: 10000004
 [2026-03-10 18:35:26] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-10 22:17:43] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-10 23:13:30] INFO: Inicio de sesión exitoso para cédula: 29617475
+[2026-03-10 23:13:42] INFO: Inicio de sesión exitoso para cédula: 10000004
+[2026-03-10 23:14:55] INFO: Costo agregado: Costos Fijos Mensuales (FIJO)
+[2026-03-10 23:14:55] INFO: Costo agregado: Costos Variables Mensuales (VARIABLE)
+[2026-03-10 23:14:55] INFO: Producción estimada de bandejas para 2026-03: 60
+[2026-03-10 23:14:55] INFO: Merma registrada para 2026-03: 12.0%
+[2026-03-10 23:15:19] INFO: Costo agregado: Costos Fijos Mensuales (FIJO)
+[2026-03-10 23:15:19] INFO: Costo agregado: Costos Variables Mensuales (VARIABLE)
+[2026-03-10 23:15:19] INFO: Producción estimada de bandejas para 2026-03: 60
+[2026-03-10 23:15:19] INFO: Merma registrada para 2026-03: 12.0%
+[2026-03-10 23:16:08] INFO: Costo agregado: Costos Fijos Mensuales (FIJO)
+[2026-03-10 23:16:08] INFO: Costo agregado: Costos Variables Mensuales (VARIABLE)
+[2026-03-10 23:16:08] INFO: Producción estimada de bandejas para 2026-03: 60
+[2026-03-10 23:16:08] INFO: Merma registrada para 2026-03: 10.0%
+[2026-03-10 23:16:52] INFO: Inicio de sesión exitoso para cédula: 29617475

@@ -7,23 +7,50 @@ import com.comedor.modelo.entidades.Profesor;
 import com.comedor.modelo.excepciones.*;
 import com.comedor.util.ValidacionUtil;
 import com.comedor.modelo.entidades.Administrador;
-import com.comedor.modelo.persistencia.RepoAdminCdg;
-import com.comedor.modelo.persistencia.RepoSecretaria;
+import com.comedor.modelo.persistencia.IRepositorioAdminCdg;
+import com.comedor.modelo.persistencia.IRepositorioSecretaria;
 
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Validador de registro que aplica el Principio de Inversión de Dependencias (DIP).
+ * Recibe los repositorios por constructor en lugar de instanciarlos directamente.
+ */
 public class VRegistro {
     private final Usuario uIngresado;
     private final List<Usuario> usBaseDatos;
+    private final IRepositorioSecretaria repoSecretaria;
+    private final IRepositorioAdminCdg repoAdminCdg;
 
-    // Inicializa el validador de registro con el usuario a registrar y la lista existente
-    public VRegistro(Usuario uIngresado, List<Usuario> usBaseDatos) {
+    /**
+     * Constructor que permite inyección de dependencias.
+     * @param uIngresado El usuario a validar
+     * @param usBaseDatos La lista de usuarios existentes
+     * @param repoSecretaria El repositorio de secretaria
+     * @param repoAdminCdg El repositorio de códigos admin
+     */
+    public VRegistro(Usuario uIngresado, List<Usuario> usBaseDatos, 
+                     IRepositorioSecretaria repoSecretaria, 
+                     IRepositorioAdminCdg repoAdminCdg) {
         if (uIngresado == null || usBaseDatos == null) {
             throw new IllegalArgumentException("El usuario y la lista no pueden ser nulos");
         }
         this.uIngresado = uIngresado;
         this.usBaseDatos = usBaseDatos;
+        this.repoSecretaria = repoSecretaria;
+        this.repoAdminCdg = repoAdminCdg;
+    }
+    
+    /**
+     * Constructor de compatibilidad para transición gradual.
+     * @deprecated Usar el constructor con inyección de dependencias
+     */
+    @Deprecated
+    public VRegistro(Usuario uIngresado, List<Usuario> usBaseDatos) {
+        this(uIngresado, usBaseDatos, 
+             new com.comedor.modelo.persistencia.RepoSecretaria(), 
+             new com.comedor.modelo.persistencia.RepoAdminCdg());
     }
 
     // Verifica que no exista otro usuario con la misma cédula
@@ -67,8 +94,7 @@ public class VRegistro {
         // Los administradores tienen su propio mecanismo de validación (código)
         if (uIngresado instanceof Administrador) return;
 
-        RepoSecretaria repoSec = new RepoSecretaria();
-        Usuario uSecretaria = repoSec.buscarRegistroUCV(uIngresado.obtCedula());
+        Usuario uSecretaria = repoSecretaria.buscarRegistroUCV(uIngresado.obtCedula());
 
         if (uSecretaria == null) {
             throw new InvalidCredentialsException(
@@ -124,8 +150,7 @@ public class VRegistro {
             if (codigo == null || !codigo.trim().matches("[A-Za-z0-9]{8}")) {
                 throw new InvalidCredentialsException("Error en el campo Código Admin: El código debe ser alfanumérico de 8 caracteres.");
             }
-            RepoAdminCdg repoCdg = new RepoAdminCdg();
-            if (!repoCdg.existeCodigo(codigo.trim())) {
+            if (!repoAdminCdg.codigoValido(codigo.trim())) {
                 throw new InvalidCredentialsException("Error en el campo Código Admin: El código de administrador no fue encontrado o no es válido.");
             }
         }

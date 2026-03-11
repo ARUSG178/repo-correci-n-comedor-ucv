@@ -2,35 +2,49 @@ package com.comedor.controlador;
 
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.excepciones.*;
-import com.comedor.modelo.persistencia.RepoUsuarios;
-import com.comedor.modelo.persistencia.RepoSecretaria;
+import com.comedor.modelo.persistencia.IRepositorioUsuarios;
+import com.comedor.modelo.persistencia.IRepositorioSecretaria;
+import com.comedor.modelo.persistencia.IRepositorioAdminCdg;
 import com.comedor.modelo.entidades.Empleado;
 import com.comedor.modelo.entidades.Estudiante;
 import com.comedor.modelo.entidades.Administrador;
 import com.comedor.modelo.entidades.Profesor;
 import com.comedor.modelo.validaciones.VRegistro;
-import com.comedor.modelo.persistencia.RepoAdminCdg;
 import java.util.List;
 
+/**
+ * Servicio de registro que aplica el Principio de Inversión de Dependencias (DIP).
+ * Recibe las dependencias por constructor en lugar de instanciarlas directamente.
+ */
 public class ServicioRegistro {
-    private final RepoUsuarios repositorio;
+    private final IRepositorioUsuarios repositorio;
+    private final IRepositorioSecretaria repoSecretaria;
+    private final IRepositorioAdminCdg repoAdminCdg;
 
-    // Inicializa el servicio creando una instancia del repositorio de usuarios
-    public ServicioRegistro() {
-        this.repositorio = new RepoUsuarios();
+    /**
+     * Constructor que permite inyección de dependencias.
+     * @param repositorio El repositorio de usuarios a usar
+     * @param repoSecretaria El repositorio de secretaria a usar
+     * @param repoAdminCdg El repositorio de códigos admin a usar
+     */
+    public ServicioRegistro(IRepositorioUsuarios repositorio, 
+                            IRepositorioSecretaria repoSecretaria,
+                            IRepositorioAdminCdg repoAdminCdg) {
+        this.repositorio = repositorio;
+        this.repoSecretaria = repoSecretaria;
+        this.repoAdminCdg = repoAdminCdg;
     }
 
     // Valida la identidad con Secretaría y guarda la cuenta en la base de datos local
     public void registrarUsuario(Usuario nuevoUsuario) throws InvalidCredentialsException, DuplicateUserException, Exception {
         List<Usuario> usuariosRegistrados = repositorio.listarUsuarios();
 
-        VRegistro validador = new VRegistro(nuevoUsuario, usuariosRegistrados);
+        VRegistro validador = new VRegistro(nuevoUsuario, usuariosRegistrados, repoSecretaria, repoAdminCdg);
         validador.validar();
 
         repositorio.guardarUsuario(nuevoUsuario);
         if (nuevoUsuario instanceof Administrador) {
-            RepoAdminCdg repoCdg = new RepoAdminCdg();
-            repoCdg.consumirCodigo(((Administrador) nuevoUsuario).obtCodigoAdministrador());
+            repoAdminCdg.consumirCodigo(((Administrador) nuevoUsuario).obtCodigoAdministrador());
         }
 
         System.out.println("Usuario registrado exitosamente en el sistema. Cédula: " + nuevoUsuario.obtCedula());
@@ -46,8 +60,7 @@ public class ServicioRegistro {
         } 
         // CASO 2: Registro Automático (Estudiante, Empleado, Profesor)
         else {
-            RepoSecretaria repoSec = new RepoSecretaria();
-            Usuario uSecretaria = repoSec.buscarRegistroUCV(cedula);
+            Usuario uSecretaria = repoSecretaria.buscarRegistroUCV(cedula);
 
             if (uSecretaria == null) {
                 throw new InvalidCredentialsException("La cédula " + cedula + " no figura en los registros de la UCV.");

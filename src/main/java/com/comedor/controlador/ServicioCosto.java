@@ -126,6 +126,11 @@ public class ServicioCosto {
             }
         }
 
+        // VALIDACIÓN DE TIPO DE USUARIO PARA SALDO PANA
+        if (esSaldoPana) {
+            validarSaldoPana(usuario, cedulaDestino);
+        }
+
         String destino = esSaldoPana ? cedulaDestino.trim() : usuario.obtCedula();
 
         RepoUsuarios repo = new RepoUsuarios();
@@ -149,5 +154,46 @@ public class ServicioCosto {
         } else {
             throw new IOException("No se encontró el usuario en la base de datos para actualizar el saldo.");
         }
+    }
+    
+    /**
+     * Valida que solo los estudiantes puedan usar Saldo Pana.
+     * @param usuarioOrigen Usuario que intenta hacer la recarga
+     * @param cedulaDestino Cédula del usuario destino
+     * @throws IllegalArgumentException Si la validación falla
+     */
+    private void validarSaldoPana(Usuario usuarioOrigen, String cedulaDestino) throws Exception {
+        // 1. El usuario origen debe ser algún tipo de estudiante
+        if (!esEstudiante(usuarioOrigen)) {
+            throw new IllegalArgumentException("Solo los estudiantes (regulares, becarios o exonerados) pueden usar Saldo Pana para recargar a otros comensales.");
+        }
+        
+        // 2. Buscar el usuario destino para validar que sea estudiante
+        RepoUsuarios repo = new RepoUsuarios();
+        List<Usuario> usuarios = repo.listarUsuarios();
+        
+        for (Usuario u : usuarios) {
+            if (u.obtCedula().equals(cedulaDestino.trim())) {
+                // 3. El usuario destino también debe ser algún tipo de estudiante
+                if (!esEstudiante(u)) {
+                    throw new IllegalArgumentException("Solo se puede recargar saldo a estudiantes. El usuario destino es de tipo: " + u.obtTipo());
+                }
+                return; // Validación exitosa
+            }
+        }
+        
+        throw new IllegalArgumentException("No se encontró el usuario destino en el sistema.");
+    }
+    
+    /**
+     * Verifica si un usuario es algún tipo de estudiante.
+     * @param usuario Usuario a verificar
+     * @return true si es estudiante (regular, becario o exonerado)
+     */
+    private boolean esEstudiante(Usuario usuario) {
+        String tipo = usuario.obtTipo();
+        return tipo.equals("Estudiante") || 
+               tipo.equals("EstudianteBecario") || 
+               tipo.equals("EstudianteExonerado");
     }
 }

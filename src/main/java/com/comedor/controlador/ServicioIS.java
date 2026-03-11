@@ -3,20 +3,32 @@ package com.comedor.controlador;
 import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.excepciones.*;
 import com.comedor.modelo.validaciones.VSesion;
-import com.comedor.modelo.persistencia.RepoUsuarios;
+import com.comedor.modelo.persistencia.IRepositorioUsuarios;
 import com.comedor.utilidades.Logger;
 
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Servicio de inicio de sesión que aplica el Principio de Inversión de Dependencias (DIP).
+ * Recibe el repositorio por constructor en lugar de instanciarlo directamente.
+ */
 public class ServicioIS {
+    private final IRepositorioUsuarios repositorio;
+    
+    /**
+     * Constructor que permite inyección de dependencias.
+     * @param repositorio El repositorio de usuarios a usar
+     */
+    public ServicioIS(IRepositorioUsuarios repositorio) {
+        this.repositorio = repositorio;
+    }
 
     // Autentica al usuario verificando credenciales y tipo de cuenta en la base de datos
     public Usuario IniciarSesion(Usuario uIngresado) throws InvalidCredentialsException, IOException {
-        RepoUsuarios repo = new RepoUsuarios();
-        List<Usuario> usuarios = repo.listarUsuarios();
+        List<Usuario> usuarios = repositorio.listarUsuarios();
 
-        Usuario uBD = usuarioPorCedula(uIngresado.obtCedula(), usuarios);
+        Usuario uBD = repositorio.buscarPorCedula(uIngresado.obtCedula());
 
         if (uBD == null) {
             throw new InvalidCredentialsException("Usuario no encontrado");
@@ -25,33 +37,24 @@ public class ServicioIS {
         VSesion validador = new VSesion(uIngresado, uBD);
         try {
             validador.validar();
-            pLoginExitoso(uBD, usuarios, repo);
+            pLoginExitoso(uBD, usuarios);
             return uBD;
         } catch (InvalidCredentialsException ex) {
-            pLoginFallido(usuarios, repo);
+            pLoginFallido(usuarios);
             throw ex;
         }
     }
 
-    // Busca un usuario en la lista por su cédula
-    private Usuario usuarioPorCedula(String cedula, List<Usuario> usuarios) {
-        return usuarios.stream()
-                .filter(u -> u != null && u.obtCedula() != null && 
-                             u.obtCedula().trim().equalsIgnoreCase(cedula.trim()))
-                .findFirst()
-                .orElse(null);
-    }
-
     // Procesa un inicio de sesión exitoso, reseteando intentos y guardando
-    private void pLoginExitoso(Usuario usuario, List<Usuario> todosLosUsuarios, RepoUsuarios repo) throws IOException {
+    private void pLoginExitoso(Usuario usuario, List<Usuario> todosLosUsuarios) throws IOException {
         Logger.info("Inicio de sesión exitoso para cédula: " + usuario.obtCedula());
         usuario.setIntentosFallidos(0);
-        repo.guardarTodos(todosLosUsuarios);
+        repositorio.guardarTodos(todosLosUsuarios);
     }
 
     // Procesa un inicio de sesión fallido, guardando el estado actualizado del usuario
-    private void pLoginFallido(List<Usuario> todosLosUsuarios, RepoUsuarios repo) throws IOException {
+    private void pLoginFallido(List<Usuario> todosLosUsuarios) throws IOException {
         // VSesion ya modificó el objeto usuario en la lista, solo persistimos.
-        repo.guardarTodos(todosLosUsuarios);
+        repositorio.guardarTodos(todosLosUsuarios);
     }
 }

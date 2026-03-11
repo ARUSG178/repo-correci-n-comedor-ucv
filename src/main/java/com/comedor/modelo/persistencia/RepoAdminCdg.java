@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class RepoAdminCdg {
+public class RepoAdminCdg implements IRepositorioAdminCdg {
     private static final String RUTA_ARCHIVO = "src/main/java/com/comedor/data/codigos_admin.txt";
 
     // Verifica si un código de administrador existe en el archivo
@@ -26,8 +26,24 @@ public class RepoAdminCdg {
             return false;
         }
     }
+    
+    // Implementación del método de la interfaz
+    @Override
+    public boolean codigoValido(String codigo) throws IOException {
+        return existeCodigo(codigo);
+    }
+    
+    // Implementación del método de la interfaz
+    @Override
+    public List<String> listarCodigos() throws IOException {
+        Path path = Paths.get(RUTA_ARCHIVO);
+        if (!Files.exists(path)) return new ArrayList<>();
+        String contenido = Files.readString(path, StandardCharsets.UTF_8);
+        return new ArrayList<>(Arrays.asList(contenido.split(";")));
+    }
 
     // Elimina un código de administrador del archivo tras su uso
+    @Override
     public void consumirCodigo(String codigo) {
         try {
             Path path = Paths.get(RUTA_ARCHIVO);

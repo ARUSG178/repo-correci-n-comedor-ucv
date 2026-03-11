@@ -9,7 +9,7 @@ import com.comedor.modelo.entidades.Usuario;
 import com.comedor.modelo.entidades.Profesor;
 import com.comedor.util.ServicioUtil;
 
-public class RepoSecretaria {
+public class RepoSecretaria implements IRepositorioSecretaria {
     private static final String RUTA_ARCHIVO = "src/main/java/com/comedor/data/secretaria_ucv.txt";
 
     // Busca una cédula en la base de datos simulada de la UCV y retorna el usuario con sus datos oficiales

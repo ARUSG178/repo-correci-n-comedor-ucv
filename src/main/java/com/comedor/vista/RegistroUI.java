@@ -36,6 +36,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import com.comedor.controlador.ServicioRegistro;
+import com.comedor.controlador.ServicioFactory;
 import com.comedor.modelo.excepciones.DuplicateUserException;
 import com.comedor.modelo.excepciones.InvalidCredentialsException;
 
@@ -247,7 +248,7 @@ public class RegistroUI extends JFrame {
             return;
         }
 
-        ServicioRegistro servicio = new ServicioRegistro();
+        ServicioRegistro servicio = ServicioFactory.getInstance().crearServicioRegistro();
         try {
             servicio.registrarUsuario(cedula, contr, codigo);
             JOptionPane.showMessageDialog(this, "Usuario registrado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
