@@ -11,7 +11,10 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 import java.net.URL;
 
 public class SeleccionarTurnoUI extends JFrame {
@@ -76,6 +79,7 @@ public class SeleccionarTurnoUI extends JFrame {
 
         // BARRA LATERAL - IGUAL estructura que HistorialReservasUI
         SideBarNavigation sideBar = new SideBarNavigation(usuario, () -> {
+            new MenuUserUI(usuario).setVisible(true);
             dispose();
         });
         backgroundPanel.add(sideBar, BorderLayout.WEST);
@@ -135,14 +139,9 @@ public class SeleccionarTurnoUI extends JFrame {
         turnosTitle.setBorder(new EmptyBorder(0, 0, 25, 0));
         turnosContainer.add(turnosTitle);
 
-        // Turnos
+        // Turnos - Cargar desde configuración
         turnosGroup = new ButtonGroup();
-        String[] turnos;
-        if ("Desayuno".equalsIgnoreCase(tipoComida)) {
-            turnos = new String[]{"07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00"};
-        } else {
-            turnos = new String[]{"12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00"};
-        }
+        String[] turnos = cargarTurnosDesdeConfiguracion();
 
         for (String turno : turnos) {
             JToggleButton turnoButton = createTurnoButton(turno);
@@ -186,5 +185,43 @@ public class SeleccionarTurnoUI extends JFrame {
         button.setActionCommand(text);
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
         return button;
+    }
+
+    private String[] cargarTurnosDesdeConfiguracion() {
+        Properties props = new Properties();
+        File configFile = new File("turnos_config.properties");
+
+        // Valores por defecto
+        String[] turnosDefault;
+        if ("Desayuno".equalsIgnoreCase(tipoComida)) {
+            turnosDefault = new String[]{"07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00"};
+        } else {
+            turnosDefault = new String[]{"12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00"};
+        }
+
+        if (!configFile.exists()) {
+            return turnosDefault;
+        }
+
+        try (FileInputStream in = new FileInputStream(configFile)) {
+            props.load(in);
+
+            if ("Desayuno".equalsIgnoreCase(tipoComida)) {
+                return new String[]{
+                    props.getProperty("desayuno.turno1", turnosDefault[0]),
+                    props.getProperty("desayuno.turno2", turnosDefault[1]),
+                    props.getProperty("desayuno.turno3", turnosDefault[2])
+                };
+            } else {
+                return new String[]{
+                    props.getProperty("almuerzo.turno1", turnosDefault[0]),
+                    props.getProperty("almuerzo.turno2", turnosDefault[1]),
+                    props.getProperty("almuerzo.turno3", turnosDefault[2])
+                };
+            }
+        } catch (IOException e) {
+            System.err.println("Error cargando configuración de turnos: " + e.getMessage());
+            return turnosDefault;
+        }
     }
 }

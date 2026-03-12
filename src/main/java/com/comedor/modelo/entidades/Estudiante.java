@@ -11,6 +11,13 @@ public class Estudiante extends Usuario {
         setCarrera(carrera);
         setFacultad(facultad);
     }
+    
+    // Inicializa un estudiante con todos los datos (para lectura desde archivos)
+    public Estudiante(String cedula, String nombre, String contraseña, String carrera, String facultad) {
+        super(nombre, cedula, contraseña);
+        setCarrera(carrera);
+        setFacultad(facultad);
+    }
 
     // Retorna el identificador de tipo para estudiante
     @Override

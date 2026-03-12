@@ -28,6 +28,11 @@ public class VSesion {
 
     // Ejecuta la validación de credenciales y gestiona intentos fallidos
     public void validar() throws InvalidCredentialsException {
+        
+        // Primero verificar si el usuario está activo
+        if (!uBaseDatos.obtEstado()) {
+            throw new InvalidCredentialsException("Cuenta desactivada. Contacte al administrador.");
+        }
 
         if (!(validarCedula() && validarContraseña())) {
             uBaseDatos.setIntentosFallidos(uBaseDatos.obtIntentosFallidos() + 1);

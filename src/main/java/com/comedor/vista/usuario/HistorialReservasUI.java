@@ -82,6 +82,7 @@ public class HistorialReservasUI extends JFrame {
 
         // Sidebar
         SideBarNavigation sideBar = new SideBarNavigation(usuario, () -> {
+            new MenuUserUI(usuario).setVisible(true);
             dispose();
         });
         backgroundPanel.add(sideBar, BorderLayout.WEST);

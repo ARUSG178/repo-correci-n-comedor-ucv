@@ -80,9 +80,7 @@ public class GestionUsuariosUI extends JFrame {
                 dispose();
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(this,
-                    "Error al volver al panel principal:\n" + e.getMessage(),
-                    "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error al volver al panel principal: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
         backgroundPanel.add(sideBar, BorderLayout.WEST);
@@ -91,7 +89,7 @@ public class GestionUsuariosUI extends JFrame {
         rightPanel.setOpaque(false);
         rightPanel.setBorder(new EmptyBorder(20, 20, 40, 20));
 
-        model = new DefaultTableModel(new Object[]{"Tipo", "Cédula", "Nombre", "Estado", "Saldo"}, 0) {
+        model = new DefaultTableModel(new Object[]{"Tipo", "Cédula", "Nombre", "Estado", "Saldo", "Descuento"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -167,13 +165,26 @@ public class GestionUsuariosUI extends JFrame {
 
         model.setRowCount(0);
         for (Usuario u : usuarios) {
+            String descuento = obtenerDescuento(u);
             model.addRow(new Object[]{
                     u.obtTipo(),
                     u.obtCedula(),
                     u.obtNombre(),
                     u.obtEstado() ? "Activo" : "Inactivo",
-                    String.format("$ %.2f", u.obtSaldo())
+                    String.format("$ %.2f", u.obtSaldo()),
+                    descuento
             });
+        }
+    }
+
+    private String obtenerDescuento(Usuario u) {
+        if (u instanceof EstudianteBecario) {
+            EstudianteBecario becario = (EstudianteBecario) u;
+            return becario.obtPorcentajeDescuento() + "%";
+        } else if (u instanceof EstudianteExonerado) {
+            return "100% (Exonerado)";
+        } else {
+            return "N/A";
         }
     }
 
@@ -187,6 +198,25 @@ public class GestionUsuariosUI extends JFrame {
         Usuario u = usuarios.get(row);
         u.setEstado(!u.obtEstado());
         model.setValueAt(u.obtEstado() ? "Activo" : "Inactivo", row, 3);
+        model.setValueAt(obtenerDescuento(u), row, 5); // Actualizar columna de descuento
+        
+        // Guardar automáticamente el cambio de estado
+        RepoUsuarios repo = new RepoUsuarios();
+        try {
+            repo.guardarTodos(usuarios);
+            JOptionPane.showMessageDialog(this, 
+                "Estado del usuario actualizado a " + (u.obtEstado() ? "Activo" : "Inactivo"), 
+                "Gestión de usuarios", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            Logger.error("Error guardando cambios de estado", e);
+            JOptionPane.showMessageDialog(this, 
+                "No se pudo guardar el cambio de estado.", 
+                "Gestión de usuarios", JOptionPane.ERROR_MESSAGE);
+            // Revertir el cambio si no se pudo guardar
+            u.setEstado(!u.obtEstado());
+            model.setValueAt(u.obtEstado() ? "Activo" : "Inactivo", row, 3);
+            model.setValueAt(obtenerDescuento(u), row, 5); // Revertir columna de descuento
+        }
     }
 
     private void guardarCambios() {

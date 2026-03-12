@@ -66,17 +66,33 @@ public class ServicioRegistro {
                 throw new InvalidCredentialsException("La cédula " + cedula + " no figura en los registros de la UCV.");
             }
 
+            // Obtener datos desde secretaría
+            String nombre = uSecretaria.obtNombre();
+            
             if (uSecretaria instanceof Estudiante) {
-                nuevoUsuario = new Estudiante(cedula, contr, "", "");
+                String carrera = ((Estudiante) uSecretaria).obtCarrera();
+                String facultad = ((Estudiante) uSecretaria).obtFacultad();
+                nuevoUsuario = new Estudiante(cedula, contr, carrera, facultad);
+                nuevoUsuario.setNombre(nombre);
             } else if (uSecretaria instanceof Profesor) {
-                nuevoUsuario = new Profesor(cedula, contr, "", "");
+                String depto = ((Profesor) uSecretaria).obtDepartamento();
+                String materia = ((Profesor) uSecretaria).obtCodigo();
+                nuevoUsuario = new Profesor(cedula, contr, depto, materia);
+                nuevoUsuario.setNombre(nombre);
+            } else if (uSecretaria instanceof Empleado) {
+                String cargo = ((Empleado) uSecretaria).obtCargo();
+                String depto = ((Empleado) uSecretaria).obtDepartamento();
+                String codEmp = ((Empleado) uSecretaria).obtCodigoEmpleado();
+                nuevoUsuario = new Empleado(cedula, contr, cargo, depto, codEmp);
+                nuevoUsuario.setNombre(nombre);
             } else {
-                // Aquí entran Empleados
-                nuevoUsuario = new Empleado(cedula, contr, "", "", "");
+                // Fallback: crear como Estudiante genérico
+                nuevoUsuario = new Estudiante(cedula, contr, "", "");
+                nuevoUsuario.setNombre(nombre);
             }
         }
 
-        // Delegamos al método principal que valida y guarda (VRegistro se encargará de llenar los datos faltantes)
+        // Delegamos al método principal que valida y guarda
         this.registrarUsuario(nuevoUsuario);
     }
 }

@@ -366,16 +366,12 @@ public class SideBarNavigation extends JPanel {
         sideBar.add(Box.createRigidArea(new Dimension(0, 20))); // Espaciado entre botones
         
         sideBar.add(crearBotonNavegacion("\ud83d\udcc5", "Administrar Turnos", () -> {
-            String mensaje = "Turnos Actuales del Comedor:\n\n" +
-                             "DESAYUNO:\n" +
-                             "• 07:00 - 08:00\n" +
-                             "• 08:00 - 09:00\n" +
-                             "• 09:00 - 10:00\n\n" +
-                             "ALMUERZO:\n" +
-                             "• 12:00 - 13:00\n" +
-                             "• 13:00 - 14:00\n" +
-                             "• 14:00 - 15:00";
-            JOptionPane.showMessageDialog(this, mensaje, "Administración de Turnos", JOptionPane.INFORMATION_MESSAGE);
+            try {
+                new com.comedor.vista.admin.ConfigurarTurnosUI(usuario).setVisible(true);
+                SwingUtilities.getWindowAncestor(this).dispose();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al abrir Administrar Turnos:\n" + e.getMessage(), "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+            }
         }));
         sideBar.add(Box.createRigidArea(new Dimension(0, 20))); // Espaciado entre botones
         

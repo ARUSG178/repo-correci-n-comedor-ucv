@@ -1,5 +1,6 @@
 package com.comedor.vista.usuario;
 
+import com.comedor.modelo.persistencia.RepoUsuarios;
 import com.comedor.controlador.ServicioCosto;
 import com.comedor.modelo.entidades.Monedero;
 import com.comedor.modelo.entidades.Usuario;
@@ -18,7 +19,7 @@ import java.awt.event.KeyEvent;
 public class PRecarga extends JPanel {
 
     private final Usuario usuario;
-    private final Monedero monedero;
+    private Monedero monedero;
     private final Runnable alRecargar; // Acción a ejecutar tras una recarga exitosa
     private final ServicioCosto servicioCosto;
     
@@ -212,6 +213,23 @@ public class PRecarga extends JPanel {
         if (lblSaldoActual == null) return;
         lblSaldoActual.setText(String.format("$ %.2f", monedero.obtSaldo()));
     }
+    
+    private void actualizarUsuarioDesdeArchivo() {
+        try {
+            RepoUsuarios repo = new RepoUsuarios();
+            var usuarios = repo.listarUsuarios();
+            for (Usuario u : usuarios) {
+                if (u.obtCedula().equals(usuario.obtCedula())) {
+                    usuario.setSaldo(u.obtSaldo());
+                    // Actualizar también el monedero
+                    monedero = new Monedero(usuario);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error actualizando usuario desde archivo: " + e.getMessage());
+        }
+    }
 
     private void procesarRecarga() {
         try {
@@ -224,22 +242,37 @@ public class PRecarga extends JPanel {
             double monto = Double.parseDouble(textoMonto);
 
             if (mostrarCedulaDestino) {
+                // Saldo Pana
                 String cedulaDestino = txtCedulaDestino.getText().trim();
-                if (cedulaDestino == null || cedulaDestino.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Por favor ingrese la cédula destino.", "Error", JOptionPane.WARNING_MESSAGE);
+                if (cedulaDestino.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Ingrese la cédula del estudiante destino.", "Error", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-
+                
                 servicioCosto.procesarRecarga(usuario, monto, null, null, cedulaDestino);
+                
+                // Actualizar el objeto usuario con el nuevo saldo desde el archivo
+                actualizarUsuarioDesdeArchivo();
+                
                 actualizarSaldoVisual();
                 txtMontoRecarga.setText("");
                 txtCedulaDestino.setText("");
                 JOptionPane.showMessageDialog(this, "Saldo Pana realizado.");
             } else {
+                // Recarga normal
                 String banco = (cmbBanco != null) ? (String) cmbBanco.getSelectedItem() : null;
                 String referencia = (txtReferencia != null) ? txtReferencia.getText().trim() : null;
-
+                
+                if (referencia == null || referencia.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Ingrese el número de referencia.", "Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
                 servicioCosto.procesarRecarga(usuario, monto, banco, referencia);
+                
+                // Actualizar el objeto usuario con el nuevo saldo desde el archivo
+                actualizarUsuarioDesdeArchivo();
+                
                 actualizarSaldoVisual();
                 txtMontoRecarga.setText("");
                 txtReferencia.setText("");

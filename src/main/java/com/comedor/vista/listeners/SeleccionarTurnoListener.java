@@ -80,6 +80,7 @@ public class SeleccionarTurnoListener implements ActionListener {
                 new com.comedor.ReconocimientoFacialUI(usuario, costoPlatillo, fechaReserva).setVisible(true);
             });
             
+            // Cerrar ventana actual solo si la reserva fue exitosa
             parentFrame.dispose();
         } catch (Exception ex) {
             Logger.error("Error al procesar el turno", ex);

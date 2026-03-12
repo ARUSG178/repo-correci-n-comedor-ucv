@@ -154,9 +154,7 @@ public class VerMenuAdminUI extends JFrame {
                 dispose();
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(this,
-                    "Error al volver al panel principal:\n" + e.getMessage(),
-                    "Error de Navegación", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error al volver al panel principal: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
         backgroundPanel.add(sideBar, BorderLayout.WEST);

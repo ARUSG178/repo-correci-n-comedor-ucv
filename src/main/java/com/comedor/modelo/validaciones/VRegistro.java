@@ -127,7 +127,6 @@ public class VRegistro {
             ((Profesor) uIngresado).setCodigo(((Profesor) uSecretaria).obtCodigo());
         }
 
-        // Aquí podrías agregar validaciones extra, como que la Carrera coincida con la de secretaría, etc.
     }
 
     // Ejecuta todas las validaciones necesarias para registrar un usuario
@@ -164,6 +163,4 @@ public class VRegistro {
             throw new InvalidCredentialsException("Error en los datos de Profesor: El Departamento no puede estar vacío.");
         }
     }
-
-
 }

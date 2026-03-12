@@ -1,7 +1,11 @@
 Profesor;6017761;Miryam Soto;123456;true;0;0.0;u;a
-Estudiante;29617475;Jesús Soto;123456;true;0;418.48999999999995;Computación;Ciencias
+Estudiante;29617475;Jesús Soto;123456;true;0;1418.3799999999999;Computación;Ciencias
 Estudiante;10000001;Estudiante Test;123456;true;0;1200.0;Computación;Ciencias
 Profesor;10000002;Profesor Test;123456;true;0;0.0;Matemáticas;PROF0001
 Empleado;10000003;Empleado Test;123456;true;0;50.0;Analista;Recursos Humanos;EMP00001
 Administrador;10000004;Admin Test;123456;true;0;0.0;ADMIN123
 EstudianteBecario;44444444;Luis Becario;44444444;true;0;0.0;Medicina;Salud;95.0
+Estudiante;6827188;Claudia Soto;123456;true;0;1501.8899999999999;Computación;Ciencias
+Estudiante;3030303;;123456;true;0;0.0;Sociología;Ciencias Económicas y Sociales
+Estudiante;12345654;;123456;true;0;0.0;Medicina;Medicina
+Estudiante;12345665;Nose;123456;true;0;0.0;Medicina;Medicina
